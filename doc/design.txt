@@ -1,0 +1,91 @@
+
+##
+## use badger as the storage engine.
+##
+
+* keys cannot have \n
+* the character : has special handing if searching with segments and should not be used as part of a key character
+* the character , is used in the header for alias list and also should not be used as part of a key character.
+
+* top level are separate badger databases.
+
+* security via shared secret as tkn=
+  * https expected to be in use.
+
+* simulated directory structure. so can have nesting,
+ * listings at the directory level
+ * detection of subdirectories to auto prefix searched
+
+ ex: ctl bucket can have /users/ /games/
+
+* /status/{bucket} returns data about the bucket.
+
+GET / <- list all buckets
+
+DELETE /{bucket}/{path/path/key..} <- delete the object
+    optional headers:
+        alias=alias1:alias2 ...
+
+POST /{bucket}/{path/path/key..} (body is data) write or update the object.
+    optional headers:
+        alias=alias1:alias2 ...
+
+GET /{bucket}? parameters <-
+        with no options will list all keys
+        options can include the data
+            prefix=some matching prefix
+            values=0/1 0=default (no values)
+            b64=0/1 <- will the data be in b64 encoding? use for binary.
+            skip=#
+            max=#
+            segments=relation key list <- ex: userIds.
+                must be part of key separated by : all must match but order is not relevant
+        results as json
+
+        [ { 'key': 'dfdf', 'value': 'vdfvdfv' } ]
+        if there is an error, will return  { 'error': msg }, will be last entry
+
+// post body is list of key
+POST /get/{bucket}  ? b64
+ result: json body
+
+
+
+============================================================================================================
+Segments are parts of keys separated by :
+ This allows keys to be searched with a filtering on parts of the keys.
+
+============================================================================================================
+Aliases allow an alternate index to be created.  These become keys added like other keys but point to the original
+data.  It's up to the caller to set the alias for the key during the create call.  Updating the primary key will
+also update the alias since it is a pointer to the key.  Deleting the primary will require the aliases to be placed in
+the header in order to maintain a valid structure.
+
+Example usage:  If you have a game with 2 players and want to be able to find the game or games for the players can do:
+Add key  gameId1
+     alias=player1:player2:gameId1;player2:player1:gameId1
+
+This allows prefix searched by players, also with segments can find games where both players played. (use prefix and segment options)
+
+Structure in the KV Store:
+gameId1 -> { the json game data }
+player1:player2:gameId1 -> gameId1
+player2:player1:gameId1 -> gameId1
+
+So there are 3 keys stored.
+
+* Care must be taken that aliases are unique, that is why the final segment is the gameId
+
+This structure allows a simple get for the game Id
+Searching for games played by players and
+games played by both players.
+Prefix search by first node provides efficient lookup.
+
+===================================================
+Note the kv stored doesn't maintain the relationship from key to aliases, its up to the application
+to maintain this relationship.
+
+===================================================
+Orphaned aliases with not show in search results.
+
+

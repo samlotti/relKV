@@ -1,0 +1,9 @@
+
+# We highly  recommend setting a high number for GOMAXPROCS, which  allows Go to observe the full
+IOPS throughput provided by modern SSDs. In Dgraph, we have set it to 128.  For more details, see
+this thread.
+
+# We recommend setting max file descriptors to a high number depending upon the expected size of
+ your data. On Linux and Mac, you can check  the file descriptor limit with ulimit -n -H for the
+ hard  limit and ulimit -n -S for  the soft limit.  A soft limit of 65535  is a good lower bound.
+ You can adjust the limit as needed.

@@ -1,0 +1,12 @@
+
+* Create buckets support, also support configuration file buckets.  But bucket list is dynamic so at
+  startup scan the data directory for buckets as well as the configuration file.
+
+
+* add alias to create and delete
+
+* do parent lookup when an alias key is found and return that data.
+  considered not found if the parent key is not found.
+
+* provide better testing
+
