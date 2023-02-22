@@ -14,13 +14,18 @@ import (
 )
 
 type environment struct {
+	envFile string
+	logFile string
 }
 
-var Environment environment = environment{}
+var Environment environment = environment{
+	envFile: ".env",
+	logFile: "kvDb.log",
+}
 
 // EnvInit - Called at startup.
 func EnvInit() {
-	var fileName = ".env"
+	var fileName = Environment.envFile
 	viper.SetConfigFile(fileName)
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -86,7 +91,7 @@ func (e *environment) GetIntArray(key string) []int {
 	for _, bname := range strings.Split(val, ",") {
 		val, err := strconv.Atoi(strings.TrimSpace(bname))
 		if err != nil {
-			log.Fatal(fmt.Sprintf("invalid list of integers for %s found %s", key, val))
+			log.Fatal(fmt.Sprintf("invalid list of integers for %s found %s", key, bname))
 		}
 		r = append(r, val)
 	}

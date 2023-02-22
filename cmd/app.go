@@ -16,7 +16,7 @@ type BucketName string
 
 var buckets *BucketsDb
 
-func BootServer(version string) {
+func BootServer(version string, readyChannel chan bool) {
 	log.Printf("Starting kvDb %s\n", version)
 	EnvInit()
 
@@ -27,17 +27,20 @@ func BootServer(version string) {
 		panic(fmt.Sprintf("port in use: %s", listen))
 	}
 
-	f, err := os.OpenFile("kvDb.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer f.Close()
+	if len(Environment.logFile) > 0 {
+		f, err := os.OpenFile(Environment.logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("error opening file: %v", err)
+		}
+		defer f.Close()
 
-	log.SetOutput(f)
+		log.SetOutput(f)
+	}
 
 	buckets = &BucketsDb{
+		serverState:   Starting,
 		baseTableSize: 8 << 20, // 8MB
-		dbPath:        Environment.GetEnv("DB_PATH", "/var/lib/bucketsDB"),
+		dbPath:        Environment.GetEnv("DB_PATH", ""),
 		buckets:       Environment.GetBucketArray("BUCKETS"),
 	}
 
@@ -50,7 +53,7 @@ func BootServer(version string) {
 
 	go buckets.runGC()
 
-	BackupsInit()
+	BackupsInit(buckets)
 	go Backups.run()
 
 	log.Printf("Listening on:%s", listen)
@@ -62,10 +65,10 @@ func BootServer(version string) {
 	}
 
 	go func() {
-		signChan := make(chan os.Signal, 1)
+		buckets.stopChan = make(chan os.Signal, 1)
 
-		signal.Notify(signChan, os.Interrupt, syscall.SIGTERM)
-		sig := <-signChan
+		signal.Notify(buckets.stopChan, os.Interrupt, syscall.SIGTERM)
+		sig := <-buckets.stopChan
 		log.Println("shutdown:", sig)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -74,11 +77,18 @@ func BootServer(version string) {
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Fatalf("HTTP server shutdown failed:%+s", err)
 		}
+		buckets.serverState = Stopped
 	}()
+
+	log.Println("sending ready")
+	buckets.serverState = Running
+	readyChannel <- true
+	log.Println("sent ready")
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Println(err)
 	}
+
 }
 
 // CheckPortAvail if a port is available

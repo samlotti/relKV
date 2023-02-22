@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -20,14 +21,37 @@ var reservedKeys = map[string]bool{
 	"api":     true,
 }
 
+type ServerState int
+
+const Starting ServerState = 0
+const Running ServerState = 1
+const Stopped ServerState = 2
+
 type BucketsDb struct {
 	dbBucket      map[BucketName]*badger.DB
 	dbPath        string
 	baseTableSize int64
 	buckets       []BucketName
+	serverState   ServerState
+	stopChan      chan os.Signal
+}
+
+func (b *BucketsDb) shutDownServer() {
+	b.stopChan <- syscall.SIGINT
+	for {
+		time.Sleep(100 * time.Millisecond)
+		if b.serverState == Stopped {
+			return
+		}
+	}
 }
 
 func (b *BucketsDb) Init() {
+
+	if len(b.dbPath) == 0 {
+		panic("DB_PATH empty or not specified")
+	}
+
 	path, err := filepath.Abs(b.dbPath)
 	if err != nil {
 		panic(err)
@@ -87,6 +111,9 @@ func (b *BucketsDb) Close() {
 func (b *BucketsDb) runGC() {
 	for {
 		time.Sleep(10 * time.Minute)
+		if b.serverState == Stopped {
+			return
+		}
 		for name, db := range b.dbBucket {
 			if err := db.RunValueLogGC(0.7); err != nil {
 				if err != badger.ErrNoRewrite {
@@ -205,5 +232,18 @@ func (b *BucketsDb) delKey(writer http.ResponseWriter, request *http.Request) {
 	} else {
 		atomic.AddInt64(&stats.bucketStats[BucketName(bucket)].numDelete, 1)
 		writer.WriteHeader(http.StatusOK)
+	}
+}
+
+func (b *BucketsDb) waitTillStarted() {
+
+	for {
+		time.Sleep(100 * time.Millisecond)
+		if b.serverState == Running {
+			return
+		}
+		if b.serverState == Stopped {
+			panic("server stopped while waiting for it sto start")
+		}
 	}
 }

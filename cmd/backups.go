@@ -22,11 +22,16 @@ type backups struct {
 	bkfolder string
 	lastBkHr int
 	hourList []int
+	buckets  *BucketsDb
 }
 
-var Backups = &backups{}
+var Backups *backups
 
-func BackupsInit() {
+func BackupsInit(buckets *BucketsDb) {
+	Backups = &backups{
+		buckets: buckets,
+	}
+
 	Backups.lastBkHr = -1
 	Backups.bkfolder = Environment.GetEnv("BK_PATH", "")
 	Backups.hourList = Environment.GetIntArray("BK_HOURS")
@@ -50,6 +55,10 @@ func (b *backups) run() {
 	}
 	for {
 		time.Sleep(1 * time.Minute)
+
+		if b.buckets.serverState == Stopped {
+			return
+		}
 
 		b.runBk()
 
