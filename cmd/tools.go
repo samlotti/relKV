@@ -75,6 +75,7 @@ func (e *environment) GetBucketArray(key string) []BucketName {
 
 	r := make([]BucketName, 0)
 	for _, bname := range strings.Split(val, ",") {
+		ensureLowercase(bname)
 		r = append(r, BucketName(strings.TrimSpace(bname)))
 	}
 	return r
@@ -195,4 +196,13 @@ func createBackupFilename(name BucketName, addDay bool, addHour bool) string {
 
 func addZipToFilename(name string) string {
 	return name + ".zip"
+}
+
+func ensureLowercase(bname string) {
+	if strings.ToLower(bname) != bname {
+		panic(fmt.Sprintf("name must be lowercase: %s", bname))
+	}
+	if strings.TrimSpace(bname) != bname {
+		panic(fmt.Sprintf("name must not have spaces:%s", bname))
+	}
 }

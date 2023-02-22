@@ -17,7 +17,9 @@ func (b *BucketsDb) newHTTPRouter() *mux.Router {
 		dataRouter.Use(auth.Middleware)
 	}
 
-	// dataRouter.HandleFunc("/{bucket}", v.createBucket).Methods(http.MethodPut)
+	if b.allowCreate {
+		dataRouter.HandleFunc("/{bucket}", b.createBucket).Methods(http.MethodPut)
+	}
 
 	dataRouter.HandleFunc("/", b.listBuckets).Methods(http.MethodGet)
 	dataRouter.HandleFunc("/{bucket}", b.listKeys).Methods(http.MethodGet)

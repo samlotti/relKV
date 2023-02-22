@@ -14,6 +14,9 @@ func startTestServer(testenv string) {
 	os.Mkdir("../test/data", os.ModePerm)
 	os.Mkdir("../test/databk", os.ModePerm)
 
+	// Create a bucket not in the environment list
+	os.Mkdir("../test/data/testbucket", os.ModePerm)
+
 	if len(testenv) == 0 {
 		Environment.envFile = "../test/test.env"
 	} else {

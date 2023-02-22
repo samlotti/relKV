@@ -42,6 +42,7 @@ func BootServer(version string, readyChannel chan bool) {
 		baseTableSize: 8 << 20, // 8MB
 		dbPath:        Environment.GetEnv("DB_PATH", ""),
 		buckets:       Environment.GetBucketArray("BUCKETS"),
+		allowCreate:   Environment.GetBoolEnv("ALLOW_CREATE_DB"),
 	}
 
 	buckets.Init()

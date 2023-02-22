@@ -30,6 +30,7 @@ const Stopped ServerState = 2
 type BucketsDb struct {
 	dbBucket      map[BucketName]*badger.DB
 	dbPath        string
+	allowCreate   bool
 	baseTableSize int64
 	buckets       []BucketName
 	serverState   ServerState
@@ -66,6 +67,18 @@ func (b *BucketsDb) Init() {
 }
 
 func (b *BucketsDb) openDBBuckets() {
+
+	// Read the data directory and look for buckets
+	dirs, err := os.ReadDir(b.dbPath)
+	if err != nil {
+		panic(err)
+	}
+	for _, entry := range dirs {
+		if entry.IsDir() {
+			b.addBucket(BucketName(entry.Name()))
+		}
+	}
+
 	b.dbBucket = make(map[BucketName]*badger.DB)
 	for _, bname := range b.buckets {
 		err := b.Open(BucketName(bname))
@@ -246,4 +259,19 @@ func (b *BucketsDb) waitTillStarted() {
 			panic("server stopped while waiting for it sto start")
 		}
 	}
+}
+
+func (b *BucketsDb) createBucket(writer http.ResponseWriter, request *http.Request) {
+	// todo
+	writer.WriteHeader(http.StatusBadRequest)
+}
+
+func (b *BucketsDb) addBucket(name BucketName) {
+	ensureLowercase(string(name))
+	for _, e := range b.buckets {
+		if e == name {
+			return
+		}
+	}
+	b.buckets = append(b.buckets, BucketName(name))
 }
