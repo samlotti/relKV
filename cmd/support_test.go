@@ -47,12 +47,11 @@ func startTestServer(testenv string) {
 	} else {
 		Environment.envFile = testenv
 	}
-	Environment.logFile = ""
 
-	readyChannel := make(chan bool)
+	readyChannel := make(chan *BucketsDb)
 	go BootServer("test", readyChannel)
 	<-readyChannel
-	buckets.waitTillStarted()
+	buckets.WaitTillStarted()
 
 }
 func stopTestServer() {

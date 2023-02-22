@@ -17,9 +17,11 @@ type BucketName string
 
 var buckets *BucketsDb
 
-func BootServer(version string, readyChannel chan bool) {
+func BootServer(version string, readyChannel chan *BucketsDb) {
 	log.Printf("Starting kvDb %s\n", version)
 	EnvInit()
+
+	logFile := Environment.GetEnv("LOG_FILE", "")
 
 	listen := Environment.GetEnv("HTTP_HOST", "0.0.0.0:8080")
 	if !strings.Contains(listen, ":") {
@@ -31,8 +33,8 @@ func BootServer(version string, readyChannel chan bool) {
 		panic(fmt.Sprintf("port in use: %s", listen))
 	}
 
-	if len(Environment.logFile) > 0 {
-		f, err := os.OpenFile(Environment.logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if len(logFile) > 0 {
+		f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatalf("error opening file: %v", err)
 		}
@@ -42,6 +44,7 @@ func BootServer(version string, readyChannel chan bool) {
 	}
 
 	buckets = &BucketsDb{
+		logfile:        logFile,
 		listenAddrPort: listen,
 		serverState:    Starting,
 		baseTableSize:  8 << 20, // 8MB
@@ -88,7 +91,7 @@ func BootServer(version string, readyChannel chan bool) {
 
 	log.Println("sending ready")
 	buckets.serverState = Running
-	readyChannel <- true
+	readyChannel <- buckets
 	log.Println("sent ready")
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

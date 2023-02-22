@@ -38,10 +38,20 @@ type BucketsDb struct {
 	serverState    ServerState
 	stopChan       chan os.Signal
 	authsecret     *AuthSecret
+	logfile        string
 }
 
 func (b *BucketsDb) shutDownServer() {
 	b.stopChan <- syscall.SIGINT
+	for {
+		time.Sleep(100 * time.Millisecond)
+		if b.serverState == Stopped {
+			return
+		}
+	}
+}
+
+func (b *BucketsDb) WaitTillStopped() {
 	for {
 		time.Sleep(100 * time.Millisecond)
 		if b.serverState == Stopped {
@@ -260,7 +270,7 @@ func (b *BucketsDb) getListenAddr() string {
 	return "http://" + hostport
 }
 
-func (b *BucketsDb) waitTillStarted() {
+func (b *BucketsDb) WaitTillStarted() {
 
 	for {
 		time.Sleep(100 * time.Millisecond)

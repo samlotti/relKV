@@ -15,12 +15,10 @@ import (
 
 type environment struct {
 	envFile string
-	logFile string
 }
 
 var Environment environment = environment{
 	envFile: ".env",
-	logFile: "kvDb.log",
 }
 
 // EnvInit - Called at startup.
