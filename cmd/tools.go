@@ -75,7 +75,10 @@ func (e *environment) GetBucketArray(key string) []BucketName {
 
 	r := make([]BucketName, 0)
 	for _, bname := range strings.Split(val, ",") {
-		ensureLowercase(bname)
+		if !validateBucketName(string(bname)) {
+			panic(fmt.Sprintf("bad bucket name %s", bname))
+		}
+
 		r = append(r, BucketName(strings.TrimSpace(bname)))
 	}
 	return r
@@ -198,11 +201,22 @@ func addZipToFilename(name string) string {
 	return name + ".zip"
 }
 
-func ensureLowercase(bname string) {
+func validateBucketName(bname string) bool {
 	if strings.ToLower(bname) != bname {
-		panic(fmt.Sprintf("name must be lowercase: %s", bname))
+		return false
 	}
 	if strings.TrimSpace(bname) != bname {
-		panic(fmt.Sprintf("name must not have spaces:%s", bname))
+		return false
 	}
+	if strings.Contains(bname, " ") {
+		return false
+	}
+	if strings.Contains(bname, ",") {
+		return false
+	}
+	if strings.Contains(bname, "/") {
+		return false
+	}
+	return true
+
 }

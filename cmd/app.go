@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -21,6 +22,9 @@ func BootServer(version string, readyChannel chan bool) {
 	EnvInit()
 
 	listen := Environment.GetEnv("HTTP_HOST", "0.0.0.0:8080")
+	if !strings.Contains(listen, ":") {
+		panic("HTTP_HOST should contain a port")
+	}
 
 	// Make sure port is available
 	if !CheckPortAvail(listen) {
@@ -38,11 +42,12 @@ func BootServer(version string, readyChannel chan bool) {
 	}
 
 	buckets = &BucketsDb{
-		serverState:   Starting,
-		baseTableSize: 8 << 20, // 8MB
-		dbPath:        Environment.GetEnv("DB_PATH", ""),
-		buckets:       Environment.GetBucketArray("BUCKETS"),
-		allowCreate:   Environment.GetBoolEnv("ALLOW_CREATE_DB"),
+		listenAddrPort: listen,
+		serverState:    Starting,
+		baseTableSize:  8 << 20, // 8MB
+		dbPath:         Environment.GetEnv("DB_PATH", ""),
+		buckets:        Environment.GetBucketArray("BUCKETS"),
+		allowCreate:    Environment.GetBoolEnv("ALLOW_CREATE_DB"),
 	}
 
 	buckets.Init()

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
@@ -28,13 +29,15 @@ const Running ServerState = 1
 const Stopped ServerState = 2
 
 type BucketsDb struct {
-	dbBucket      map[BucketName]*badger.DB
-	dbPath        string
-	allowCreate   bool
-	baseTableSize int64
-	buckets       []BucketName
-	serverState   ServerState
-	stopChan      chan os.Signal
+	listenAddrPort string
+	dbBucket       map[BucketName]*badger.DB
+	dbPath         string
+	allowCreate    bool
+	baseTableSize  int64
+	buckets        []BucketName
+	serverState    ServerState
+	stopChan       chan os.Signal
+	authsecret     *AuthSecret
 }
 
 func (b *BucketsDb) shutDownServer() {
@@ -248,10 +251,26 @@ func (b *BucketsDb) delKey(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+// getListenAddr - returns as http://host:port
+func (b *BucketsDb) getListenAddr() string {
+	hostport := b.listenAddrPort
+	if strings.HasPrefix(b.listenAddrPort, ":") {
+		hostport = "localhost" + hostport
+	}
+	return "http://" + hostport
+}
+
 func (b *BucketsDb) waitTillStarted() {
 
 	for {
 		time.Sleep(100 * time.Millisecond)
+
+		_, err := http.Get(b.getListenAddr() + "/status")
+		if err != nil {
+			fmt.Printf("err: %s\n", err)
+			continue
+		}
+
 		if b.serverState == Running {
 			return
 		}
@@ -261,13 +280,10 @@ func (b *BucketsDb) waitTillStarted() {
 	}
 }
 
-func (b *BucketsDb) createBucket(writer http.ResponseWriter, request *http.Request) {
-	// todo
-	writer.WriteHeader(http.StatusBadRequest)
-}
-
 func (b *BucketsDb) addBucket(name BucketName) {
-	ensureLowercase(string(name))
+	if !validateBucketName(string(name)) {
+		panic(fmt.Sprintf("bad bucket name %s", name))
+	}
 	for _, e := range b.buckets {
 		if e == name {
 			return
