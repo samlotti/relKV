@@ -21,9 +21,9 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 	log.Printf("Starting kvDb %s\n", version)
 	EnvInit()
 
-	logFile := Environment.GetEnv("LOG_FILE", "")
+	logFile := EnvironmentInstance.GetEnv("LOG_FILE", "")
 
-	listen := Environment.GetEnv("HTTP_HOST", "0.0.0.0:8080")
+	listen := EnvironmentInstance.GetEnv("HTTP_HOST", "0.0.0.0:8080")
 	if !strings.Contains(listen, ":") {
 		panic("HTTP_HOST should contain a port")
 	}
@@ -48,9 +48,9 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 		listenAddrPort: listen,
 		serverState:    Starting,
 		baseTableSize:  8 << 20, // 8MB
-		dbPath:         Environment.GetEnv("DB_PATH", ""),
-		buckets:        Environment.GetBucketArray("BUCKETS"),
-		allowCreate:    Environment.GetBoolEnv("ALLOW_CREATE_DB"),
+		dbPath:         EnvironmentInstance.GetEnv("DB_PATH", ""),
+		buckets:        EnvironmentInstance.GetBucketArray("BUCKETS"),
+		allowCreate:    EnvironmentInstance.GetBoolEnv("ALLOW_CREATE_DB"),
 	}
 
 	buckets.Init()
@@ -63,7 +63,7 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 	go buckets.runGC()
 
 	BackupsInit(buckets)
-	go Backups.run()
+	go backupsInstance.run()
 
 	log.Printf("Listening on:%s", listen)
 

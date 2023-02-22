@@ -14,43 +14,44 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 )
 
-type backups struct {
+type Backups struct {
 	bkfolder string
 	lastBkHr int
 	hourList []int
 	buckets  *BucketsDb
 }
 
-var Backups *backups
+var backupsInstance *Backups
 
 func BackupsInit(buckets *BucketsDb) {
-	Backups = &backups{
+	backupsInstance = &Backups{
 		buckets: buckets,
 	}
 
-	Backups.lastBkHr = -1
-	Backups.bkfolder = Environment.GetEnv("BK_PATH", "")
-	Backups.hourList = Environment.GetIntArray("BK_HOURS")
+	backupsInstance.lastBkHr = -1
+	backupsInstance.bkfolder = EnvironmentInstance.GetEnv("BK_PATH", "")
+	backupsInstance.hourList = EnvironmentInstance.GetIntArray("BK_HOURS")
 
-	path, err := filepath.Abs(Backups.bkfolder)
+	path, err := filepath.Abs(backupsInstance.bkfolder)
 	if err != nil {
 		panic(err)
 	}
 	log.Printf("backup directory:%s", path)
-	Backups.bkfolder = path
+	backupsInstance.bkfolder = path
 
-	if _, err := os.Stat(Backups.bkfolder); os.IsNotExist(err) {
-		log.Printf("directory not found, %s, please create it first", Backups.bkfolder)
+	if _, err := os.Stat(backupsInstance.bkfolder); os.IsNotExist(err) {
+		log.Printf("directory not found, %s, please create it first", backupsInstance.bkfolder)
 		panic(err)
 	}
 }
 
-func (b *backups) run() {
-	if Environment.GetBoolEnv("NOBACKUP") {
+func (b *Backups) run() {
+	if EnvironmentInstance.GetBoolEnv("NOBACKUP") {
 		return
 	}
 	for {
@@ -65,11 +66,11 @@ func (b *backups) run() {
 	}
 }
 
-func (b *backups) createBackup(name BucketName, db *badger.DB) {
+func (b *Backups) createBackup(name BucketName, db *badger.DB) {
 
-	suffix_day := Environment.GetBoolEnv("BK_SUFFIX_DAY")
-	suffix_hour := Environment.GetBoolEnv("BK_SUFFIX_HOUR")
-	bk_zip := Environment.GetBoolEnv("BK_ZIP")
+	suffix_day := EnvironmentInstance.GetBoolEnv("BK_SUFFIX_DAY")
+	suffix_hour := EnvironmentInstance.GetBoolEnv("BK_SUFFIX_HOUR")
+	bk_zip := EnvironmentInstance.GetBoolEnv("BK_ZIP")
 
 	stats.backups[name].lastStart = time.Now()
 	stats.backups[name].status = "running"
@@ -130,11 +131,18 @@ func (b *backups) createBackup(name BucketName, db *badger.DB) {
 
 }
 
-func (b *backups) runBk() {
+func (b *Backups) runBk() {
 	// Don't let it die, try again next time
 	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("error in backup", r)
+		if rec := recover(); rec != nil {
+			//var wrap error
+			//if err, ok := rec.(error); ok {
+			//	wrap = errors.Wrap(err, "Panic Handler")
+			//} else {
+			//	wrap = errors.Errorf("%v", rec)
+			//}
+			fmt.Println("error in backup", rec)
+			fmt.Printf("%s", debug.Stack())
 		}
 	}()
 
@@ -156,15 +164,15 @@ func (b *backups) runBk() {
 	}
 }
 
-func (b *backups) sendSCP(name BucketName, fileToSend string) {
-	scp_host := Environment.GetEnv("BK_SCP_HOST", "")
-	scp_dir := Environment.GetEnv("BK_SCP_DIR", "")
-	scp_uname := Environment.GetEnv("BK_SCP_UNAME", "")
-	scp_upwd := Environment.GetEnv("BK_SCP_UPWD", "")
-	scp_keypath := Environment.GetEnv("BK_SCP_PATH_TO_KEY", "")
-	suffix_day := Environment.GetBoolEnv("BK_SCP_SUFFIX_DAY")
-	suffix_hour := Environment.GetBoolEnv("BK_SCP_SUFFIX_HOUR")
-	bk_zip := Environment.GetBoolEnv("BK_ZIP")
+func (b *Backups) sendSCP(name BucketName, fileToSend string) {
+	scp_host := EnvironmentInstance.GetEnv("BK_SCP_HOST", "")
+	scp_dir := EnvironmentInstance.GetEnv("BK_SCP_DIR", "")
+	scp_uname := EnvironmentInstance.GetEnv("BK_SCP_UNAME", "")
+	scp_upwd := EnvironmentInstance.GetEnv("BK_SCP_UPWD", "")
+	scp_keypath := EnvironmentInstance.GetEnv("BK_SCP_PATH_TO_KEY", "")
+	suffix_day := EnvironmentInstance.GetBoolEnv("BK_SCP_SUFFIX_DAY")
+	suffix_hour := EnvironmentInstance.GetBoolEnv("BK_SCP_SUFFIX_HOUR")
+	bk_zip := EnvironmentInstance.GetBoolEnv("BK_ZIP")
 
 	if len(scp_host) == 0 ||
 		len(scp_dir) == 0 ||
@@ -219,6 +227,7 @@ func (b *backups) sendSCP(name BucketName, fileToSend string) {
 	log.Printf("Scp %s:%s -> %s", scp_host, fileToSend, destFile)
 	err = scpClient.CopyFileToRemote(fileToSend, destFile, transferOptions)
 	if err != nil {
+		log.Printf("error sending file:%s, %s", name, err)
 		stats.backups[name].lastMessage = fmt.Sprintf("error during send %s", err.Error())
 		stats.backups[name].status = "error"
 		return

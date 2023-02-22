@@ -12,7 +12,7 @@ func (b *BucketsDb) newHTTPRouter() *mux.Router {
 
 	dataRouter := router.NewRoute().Subrouter()
 
-	if value, ok := Environment.LookupEnv("SECRET"); ok && len(value) > 5 {
+	if value, ok := EnvironmentInstance.LookupEnv("SECRET"); ok && len(value) > 5 {
 		auth := NewAuthSecret(value)
 		dataRouter.Use(auth.Middleware)
 		b.authsecret = auth

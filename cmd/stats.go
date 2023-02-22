@@ -37,21 +37,27 @@ func (s *Stats) init() {
 	s.bucketStats = make(map[BucketName]*BucketStats)
 
 	for _, bucket := range buckets.buckets {
-		s.backups[bucket] = &BackupData{
-			status:      "",
-			lastStart:   s.serverStart,
-			lastEnd:     s.serverStart,
-			lastMessage: "",
-		}
 
-		s.bucketStats[bucket] = &BucketStats{
-			numError:      0,
-			seqWriteError: 0,
-			numWrites:     0,
-			lastEMessage:  "",
-			numDelete:     0,
-		}
+		s.addBucket(bucket)
 
+	}
+}
+
+func (s *Stats) addBucket(bucket BucketName) {
+
+	s.backups[bucket] = &BackupData{
+		status:      "",
+		lastStart:   s.serverStart,
+		lastEnd:     s.serverStart,
+		lastMessage: "",
+	}
+
+	s.bucketStats[bucket] = &BucketStats{
+		numError:      0,
+		seqWriteError: 0,
+		numWrites:     0,
+		lastEMessage:  "",
+		numDelete:     0,
 	}
 }
 
@@ -64,11 +70,11 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Uptime: %s\n", dur.String())))
 	w.Write([]byte(fmt.Sprintf("Current time: %s\n\n", time.Now().Format(time.RFC822))))
 
-	if Environment.GetBoolEnv("NOBACKUP") {
-		w.Write([]byte("Backups\n"))
-		w.Write([]byte(fmt.Sprintf("** Backups are not enabled\n")))
+	if EnvironmentInstance.GetBoolEnv("NOBACKUP") {
+		w.Write([]byte("backupsInstance\n"))
+		w.Write([]byte(fmt.Sprintf("** backupsInstance are not enabled\n")))
 	} else {
-		w.Write([]byte(fmt.Sprintf("Backups - Running at hours: %s\n\n", Environment.GetEnv("BK_HOURS", "?"))))
+		w.Write([]byte(fmt.Sprintf("backupsInstance - Running at hours: %s\n\n", EnvironmentInstance.GetEnv("BK_HOURS", "?"))))
 
 		w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %s\n", "name", "status", "duration", "lastRun", "last message")))
 		for bucket, bstat := range stats.backups {

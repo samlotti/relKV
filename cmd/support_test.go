@@ -31,6 +31,22 @@ func HttpCreateBucket(bname string, token string) *http.Response {
 	return resp
 }
 
+func HttpStatus(token string) *http.Response {
+	var payload []byte
+	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/status", bytes.NewBuffer(payload))
+
+	AddAuth(token, req)
+
+	if err != nil {
+		panic(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	return resp
+}
+
 func startTestServer(testenv string) {
 
 	os.RemoveAll("../test/data")
@@ -39,13 +55,13 @@ func startTestServer(testenv string) {
 	os.Mkdir("../test/data", os.ModePerm)
 	os.Mkdir("../test/databk", os.ModePerm)
 
-	// Create a bucket not in the environment list
+	// Create a bucket not in the Environment list
 	os.Mkdir("../test/data/testbucket", os.ModePerm)
 
 	if len(testenv) == 0 {
-		Environment.envFile = "../test/test.env"
+		EnvironmentInstance.envFile = "../test/test.env"
 	} else {
-		Environment.envFile = testenv
+		EnvironmentInstance.envFile = testenv
 	}
 
 	readyChannel := make(chan *BucketsDb)

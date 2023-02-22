@@ -13,17 +13,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-type environment struct {
+type Environment struct {
 	envFile string
 }
 
-var Environment environment = environment{
+var EnvironmentInstance Environment = Environment{
 	envFile: ".env",
 }
 
 // EnvInit - Called at startup.
 func EnvInit() {
-	var fileName = Environment.envFile
+	var fileName = EnvironmentInstance.envFile
 	viper.SetConfigFile(fileName)
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -31,9 +31,9 @@ func EnvInit() {
 	}
 }
 
-// GetEnv -- Gets the value of the environment.
+// GetEnv -- Gets the value of the Environment.
 // If not specified and no default in the .env file it will return fallback
-func (e *environment) GetEnv(key string, fallback string) string {
+func (e *Environment) GetEnv(key string, fallback string) string {
 	val, found := os.LookupEnv(key)
 	if !found {
 		val, found = viper.Get(key).(string)
@@ -44,20 +44,20 @@ func (e *environment) GetEnv(key string, fallback string) string {
 	return val
 }
 
-// GetBoolEnv - reads an environment variable and converts to a boolean.
+// GetBoolEnv - reads an Environment variable and converts to a boolean.
 // 	true values are:   "1", "t", "T", "true", "TRUE", "True"
 //	false values are:  "0", "f", "F", "false", "FALSE", "False"
 //  any other value will panic with an appropriate message
-func (e *environment) GetBoolEnv(key string) bool {
+func (e *Environment) GetBoolEnv(key string) bool {
 	val := e.GetEnv(key, "f")
 	bval, err := strconv.ParseBool(val)
 	if err != nil {
-		panic(fmt.Sprintf("Environment variable invalid format: %s is expected to be a bool, found:%s", key, val))
+		panic(fmt.Sprintf("EnvironmentInstance variable invalid format: %s is expected to be a bool, found:%s", key, val))
 	}
 	return bval
 }
 
-func (e *environment) LookupEnv(key string) (string, bool) {
+func (e *Environment) LookupEnv(key string) (string, bool) {
 	val, ok := os.LookupEnv(key)
 	if !ok {
 		val, ok = viper.Get(key).(string)
@@ -65,10 +65,10 @@ func (e *environment) LookupEnv(key string) (string, bool) {
 	return val, ok
 }
 
-func (e *environment) GetBucketArray(key string) []BucketName {
+func (e *Environment) GetBucketArray(key string) []BucketName {
 	val := e.GetEnv(key, "")
 	if len(val) == 0 {
-		log.Fatal(fmt.Sprintf("%s not defined in environment", key))
+		log.Fatal(fmt.Sprintf("%s not defined in Environment", key))
 	}
 
 	r := make([]BucketName, 0)
@@ -83,10 +83,10 @@ func (e *environment) GetBucketArray(key string) []BucketName {
 
 }
 
-func (e *environment) GetIntArray(key string) []int {
+func (e *Environment) GetIntArray(key string) []int {
 	val := e.GetEnv(key, "")
 	if len(val) == 0 {
-		log.Fatal(fmt.Sprintf("%s not defined in environment", key))
+		log.Fatal(fmt.Sprintf("%s not defined in Environment", key))
 	}
 
 	r := make([]int, 0)
@@ -144,8 +144,8 @@ func getHeaderKeyInt(key string, dflt int, r *http.Request) int {
 	return val
 }
 
-func (e *environment) UseMetrics() bool {
-	return Environment.GetBoolEnv("USE_METRICS")
+func (e *Environment) UseMetrics() bool {
+	return EnvironmentInstance.GetBoolEnv("USE_METRICS")
 }
 
 func getSegments(segmentsArg string) []string {
@@ -213,6 +213,9 @@ func validateBucketName(bname string) bool {
 		return false
 	}
 	if strings.Contains(bname, "/") {
+		return false
+	}
+	if bname == "status" {
 		return false
 	}
 	return true
