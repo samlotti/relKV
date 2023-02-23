@@ -9,13 +9,13 @@ import (
 	"net/http"
 )
 
-// listKeys - returns keys in the bucket and optionally the contents
+// searchKeys - returns keys in the bucket and optionally the contents
 // parameters supported:
 //   skip, max <- paging support
 //   rel <- relationships in filename portion
 //   prefix <- limit to prefixes
 //   values <- t/f  default is false
-func (b *BucketsDb) listKeys(writer http.ResponseWriter, request *http.Request) {
+func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
 
@@ -35,6 +35,8 @@ func (b *BucketsDb) listKeys(writer http.ResponseWriter, request *http.Request) 
 	db = bdb
 
 	writer.Header().Set("content-type", "application/json")
+	writer.Header().Set(RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+
 	writer.Write([]byte("[\n"))
 
 	rnum := 0
@@ -84,6 +86,10 @@ func (b *BucketsDb) listKeys(writer http.ResponseWriter, request *http.Request) 
 				return nil
 			}
 
+			if rnum > 1 {
+				writer.Write([]byte(",\n"))
+			}
+
 			if getValues {
 				err := item.Value(func(val []byte) error {
 					if b64 {
@@ -102,8 +108,8 @@ func (b *BucketsDb) listKeys(writer http.ResponseWriter, request *http.Request) 
 			if err != nil {
 				return err
 			}
+			writer.Write([]byte("  "))
 			writer.Write(data)
-			writer.Write([]byte("\n"))
 
 		}
 		return nil
@@ -123,6 +129,6 @@ func (b *BucketsDb) listKeys(writer http.ResponseWriter, request *http.Request) 
 			writer.Write(data)
 		}
 	}
-
+	writer.Write([]byte("\n"))
 	writer.Write([]byte("]\n"))
 }

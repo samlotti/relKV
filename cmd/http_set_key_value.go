@@ -5,12 +5,16 @@ import (
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
 func (b *BucketsDb) setKey(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
+
+	aliases_val := request.Header.Get(HEADER_ALIAS_KEY)
+	aliases := strings.Split(aliases_val, HEADER_ALIAS_SEPARATOR)
 
 	var db *badger.DB
 
@@ -42,7 +46,23 @@ func (b *BucketsDb) setKey(writer http.ResponseWriter, request *http.Request) {
 			return err
 		}
 		e := badger.NewEntry(key, b)
-		return txn.SetEntry(e)
+		err = txn.SetEntry(e)
+
+		if err != nil {
+			txn.Discard()
+			return err
+		}
+
+		for _, alias := range aliases {
+			e := badger.NewEntry([]byte(alias), key).WithMeta(BADGER_FLAG_ALIAS)
+			err = txn.SetEntry(e)
+			if err != nil {
+				txn.Discard()
+				return err
+			}
+		}
+
+		return nil
 	})
 
 	if err != nil {

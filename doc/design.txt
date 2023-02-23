@@ -5,7 +5,7 @@
 
 * keys cannot have \n
 * the character : has special handing if searching with segments and should not be used as part of a key character
-* the character , is used in the header for alias list and also should not be used as part of a key character.
+* the character ; is used in the header for alias list and also should not be used as part of a key character.
 
 * top level are separate badger databases.
 

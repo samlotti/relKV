@@ -23,7 +23,7 @@ func (b *BucketsDb) newHTTPRouter() *mux.Router {
 	}
 
 	dataRouter.HandleFunc("/", b.listBuckets).Methods(http.MethodGet)
-	dataRouter.HandleFunc("/{bucket}", b.listKeys).Methods(http.MethodGet)
+	dataRouter.HandleFunc("/{bucket}", b.searchKeys).Methods(http.MethodGet)
 
 	// order is important
 	dataRouter.HandleFunc("/get/{bucket}", b.getKeys).Methods(http.MethodPost)
