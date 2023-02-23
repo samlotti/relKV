@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
 	"math"
@@ -19,11 +20,16 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
 
-	skip := getHeaderKeyInt("skip", 0, request)
-	max := getHeaderKeyInt("max", math.MaxInt, request)
-	getValues := getHeaderKeyBool("values", request)
+	skip := getHeaderKeyInt(HEADER_SKIP_KEY, 0, request)
+	max := getHeaderKeyInt(HEADER_MAX_KEY, math.MaxInt, request)
+	getValues := getHeaderKeyBool(HEADER_VALUES_KEY, request)
 	b64 := getHeaderKeyBool("b64", request)
 	segments := getSegments(getHeaderKey("segments", request))
+	explain := getHeaderKeyInt(HEADER_EXPLAIN_KEY, 0, request) == 1
+
+	ex_rows_read := 0
+	ex_rows_selected := 0
+	ex_rows_skipped := 0
 
 	var db *badger.DB
 
@@ -37,7 +43,9 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 	writer.Header().Set("content-type", "application/json")
 	writer.Header().Set(RESP_HEADER_KVDB_FUNCTION, "searchKeys")
 
-	writer.Write([]byte("[\n"))
+	if !explain {
+		writer.Write([]byte("[\n"))
+	}
 
 	rnum := 0
 	count := 0
@@ -51,12 +59,14 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 
 		var prefix []byte
 
-		userPrefix := getHeaderKey("prefix", request)
+		userPrefix := getHeaderKey(HEADER_PREFIX_KEY, request)
 		if userPrefix != "" {
 			prefix = append(prefix, []byte(userPrefix)...)
 		}
 
 		for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
+			ex_rows_read++
+
 			item := it.Item()
 			key := item.Key()
 			keyStr := string(key)
@@ -76,8 +86,33 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 				}
 			}
 
+			// Resolve to the real value if alias!
+			// If not found ignore the alias entry
+			if getValues {
+				if item.UserMeta()&BADGER_FLAG_ALIAS == BADGER_FLAG_ALIAS {
+					err := item.Value(func(val []byte) error {
+						aliasParent, err := txn.Get(val)
+						if err != nil {
+							return err
+						}
+
+						err = aliasParent.Value(func(val []byte) error {
+							kv.Value = string(val)
+							return nil
+						})
+						return err
+					})
+					// ??
+					if err != nil {
+						continue
+					}
+
+				}
+			}
+
 			rnum += 1
 			if rnum <= skip {
+				ex_rows_skipped++
 				continue
 			}
 
@@ -86,11 +121,15 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 				return nil
 			}
 
-			if rnum > 1 {
-				writer.Write([]byte(",\n"))
+			ex_rows_selected++
+
+			if ex_rows_selected > 1 {
+				if !explain {
+					writer.Write([]byte(",\n"))
+				}
 			}
 
-			if getValues {
+			if getValues && len(kv.Value) == 0 {
 				err := item.Value(func(val []byte) error {
 					if b64 {
 						kv.Value = base64.StdEncoding.EncodeToString(val)
@@ -108,8 +147,11 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 			if err != nil {
 				return err
 			}
-			writer.Write([]byte("  "))
-			writer.Write(data)
+
+			if !explain {
+				writer.Write([]byte("  "))
+				writer.Write(data)
+			}
 
 		}
 		return nil
@@ -126,9 +168,19 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 
 		data, err := json.Marshal(kv)
 		if err != nil {
-			writer.Write(data)
+			if !explain {
+				writer.Write(data)
+			}
 		}
 	}
-	writer.Write([]byte("\n"))
-	writer.Write([]byte("]\n"))
+	if !explain {
+		writer.Write([]byte("\n"))
+		writer.Write([]byte("]\n"))
+	} else {
+		writer.Header().Set("ex_row_read", fmt.Sprint(ex_rows_read))
+		writer.Header().Set("ex_rows_selected", fmt.Sprint(ex_rows_selected))
+		writer.Header().Set("ex_rows_skipped", fmt.Sprint(ex_rows_skipped))
+		writer.Write([]byte("[]\n"))
+
+	}
 }

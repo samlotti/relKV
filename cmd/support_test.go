@@ -9,6 +9,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -76,6 +77,7 @@ func HttpSearch(sk *TestSearchData, token string) *http.Response {
 	var payload []byte
 	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/"+sk.bucket, bytes.NewBuffer(payload))
 	AddAuth(token, req)
+	sk.setHeaders(req)
 
 	if err != nil {
 		panic(err)
@@ -90,7 +92,7 @@ func HttpSearch(sk *TestSearchData, token string) *http.Response {
 
 type SearchResponseEntry struct {
 	Key  string `json:"key"`
-	Data string `json:"data,omitempty"`
+	Data string `json:"value,omitempty"`
 }
 
 func SearchResponseEntryFromResponse(resp *http.Response) []SearchResponseEntry {
@@ -159,10 +161,31 @@ func (tk *TestSetKeyData) SetAliasHeader(req *http.Request) {
 }
 
 type TestSearchData struct {
-	bucket string
-	prefix string
-	max    int
-	skip   int
+	bucket  string
+	prefix  string
+	max     int
+	skip    int
+	values  bool
+	explain bool
+}
+
+func (d *TestSearchData) setHeaders(req *http.Request) {
+	if d.values {
+		req.Header.Set(HEADER_VALUES_KEY, "1")
+	}
+	if len(d.prefix) > 0 {
+		req.Header.Set(HEADER_PREFIX_KEY, d.prefix)
+	}
+	if d.explain {
+		req.Header.Set(HEADER_EXPLAIN_KEY, "1")
+	}
+	if d.skip > 0 {
+		req.Header.Set(HEADER_SKIP_KEY, fmt.Sprintf("%d", d.skip))
+	}
+	if d.max > 0 {
+		req.Header.Set(HEADER_MAX_KEY, fmt.Sprintf("%d", d.max))
+	}
+
 }
 
 func NewTestSearchData(bucket string, prefix string) *TestSearchData {
@@ -172,4 +195,12 @@ func NewTestSearchData(bucket string, prefix string) *TestSearchData {
 		max:    math.MaxInt,
 		skip:   0,
 	}
+}
+
+func stringToInt(sval string) int {
+	v, e := strconv.Atoi(sval)
+	if e != nil {
+		panic(e)
+	}
+	return v
 }
