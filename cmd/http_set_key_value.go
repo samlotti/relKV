@@ -13,8 +13,8 @@ func (b *BucketsDb) setKey(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
 
-	aliases_val := request.Header.Get(HEADER_ALIAS_KEY)
-	aliases := strings.Split(aliases_val, HEADER_ALIAS_SEPARATOR)
+	aliasesVal := request.Header.Get(HEADER_ALIAS_KEY)
+	aliases := strings.Split(aliasesVal, HEADER_ALIAS_SEPARATOR)
 
 	var db *badger.DB
 
@@ -28,7 +28,7 @@ func (b *BucketsDb) setKey(writer http.ResponseWriter, request *http.Request) {
 
 	bdb, err := b.getDB(bucket)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusNotFound)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	db = bdb
@@ -53,12 +53,14 @@ func (b *BucketsDb) setKey(writer http.ResponseWriter, request *http.Request) {
 			return err
 		}
 
-		for _, alias := range aliases {
-			e := badger.NewEntry([]byte(alias), key).WithMeta(BADGER_FLAG_ALIAS)
-			err = txn.SetEntry(e)
-			if err != nil {
-				txn.Discard()
-				return err
+		if len(aliasesVal) > 0 {
+			for _, alias := range aliases {
+				e := badger.NewEntry([]byte(alias), key).WithMeta(BADGER_FLAG_ALIAS)
+				err = txn.SetEntry(e)
+				if err != nil {
+					txn.Discard()
+					return err
+				}
 			}
 		}
 

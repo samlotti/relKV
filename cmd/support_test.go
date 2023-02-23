@@ -74,6 +74,22 @@ func HttpSetKey(data *TestSetKeyData, token string) *http.Response {
 	return resp
 }
 
+func HttpDeleteKey(data *TestDeleteData, token string) *http.Response {
+	var payload []byte
+	req, err := http.NewRequest(http.MethodDelete, buckets.getListenAddr()+"/"+data.bucket+"/"+data.key, bytes.NewBuffer(payload))
+	AddAuth(token, req)
+	data.SetAliasHeader(req)
+
+	if err != nil {
+		panic(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	return resp
+}
+
 func HttpSearch(sk *TestSearchData, token string) *http.Response {
 	var payload []byte
 	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/"+sk.bucket, bytes.NewBuffer(payload))
@@ -216,4 +232,78 @@ func decodeB64(data string) string {
 		panic(err)
 	}
 	return string(bytes)
+}
+
+func HttpListBuckets(token string) *http.Response {
+	var payload []byte
+	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/", bytes.NewBuffer(payload))
+	AddAuth(token, req)
+
+	if err != nil {
+		panic(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	return resp
+
+}
+
+func ListBucketResponseEntryFromResponse(resp *http.Response) []BucketData {
+	var result []BucketData
+	body, _ := ioutil.ReadAll(resp.Body)                  // response body is []byte
+	if err := json.Unmarshal(body, &result); err != nil { // Parse []byte to go struct pointer
+		fmt.Println("Can not unmarshal JSON")
+	}
+	fmt.Println(string(body))
+	fmt.Printf("Rec: %d\n", len(result))
+	return result
+
+}
+
+func HttpGetKeyValue(bucket string, key string, token string) *http.Response {
+	var payload []byte
+	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/"+bucket+"/"+key, bytes.NewBuffer(payload))
+	AddAuth(token, req)
+
+	if err != nil {
+		panic(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	return resp
+
+}
+
+func ResponseBodyAsString(resp *http.Response) string {
+	body, _ := ioutil.ReadAll(resp.Body) // response body is []byte
+	fmt.Println(string(body))
+	return string(body)
+
+}
+
+type TestDeleteData struct {
+	bucket  string
+	key     string
+	aliases []string
+}
+
+func NewTestDeleteData(bucket string, key string) *TestDeleteData {
+	return &TestDeleteData{
+		bucket:  bucket,
+		key:     key,
+		aliases: make([]string, 0),
+	}
+}
+func (tk *TestDeleteData) AddAlias(alias string) {
+	tk.aliases = append(tk.aliases, alias)
+}
+
+func (tk *TestDeleteData) SetAliasHeader(req *http.Request) {
+	if len(tk.aliases) > 0 {
+		req.Header.Set(HEADER_ALIAS_KEY, strings.Join(tk.aliases, HEADER_ALIAS_SEPARATOR))
+	}
 }

@@ -88,4 +88,7 @@ to maintain this relationship.
 ===================================================
 Orphaned aliases with not show in search results.
 
-
+=====
+For calls that require a bucket, if it is not found then StatusBadRequest is returned.
+This is to differentiate between key not found -> StatusNotFound
+=====

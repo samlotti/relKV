@@ -5,18 +5,11 @@ import (
 	"net/http"
 )
 
-type bucketData struct {
-	Name     string `json:"name"`
-	Error    string `json:"error,omitempty"`
-	LsmSize  int64  `json:"lsmSize"`
-	VlogSize int64  `json:"VlogSize"`
-}
-
 func (b *BucketsDb) listBuckets(writer http.ResponseWriter, request *http.Request) {
-	var buckets []*bucketData
+	var buckets []*BucketData
 
 	for name := range b.dbBucket {
-		bk := &bucketData{
+		bk := &BucketData{
 			Name: string(name),
 		}
 		buckets = append(buckets, bk)

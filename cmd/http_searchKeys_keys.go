@@ -35,7 +35,7 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 
 	bdb, err := b.getDB(bucket)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusNotFound)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	db = bdb

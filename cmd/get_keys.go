@@ -21,7 +21,7 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 	//fmt.Printf("bucket:%s\n", bucket)
 	bdb, err := b.getDB(bucket)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusNotFound)
+		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	db = bdb

@@ -235,5 +235,215 @@ func Test_PostData1(t *testing.T) {
 	assert.Equal(t, "g1", rdata[0].Key)
 	assert.Equal(t, "{game1}", decodeB64(rdata[0].Data))
 
+	// --- search bad bucket
+	sk = NewTestSearchData("b1dd", "")
+	sk.values = true
+	sk.b64 = true
+	sk.prefix = "g1"
+	resp = HttpSearch(sk, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	stopTestServer()
+}
+
+func Test_ListBuckets(t *testing.T) {
+	startTestServer("")
+
+	// Secret not needed.
+	resp := HttpListBuckets(buckets.authsecret.secret)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	defer resp.Body.Close()
+	bucketData := ListBucketResponseEntryFromResponse(resp)
+
+	assert.Equal(t, 3, len(bucketData))
+
+	names := map[string]string{
+		"ctl_games":  "x",
+		"ct_games":   "x",
+		"testbucket": "x",
+	}
+	for _, data := range bucketData {
+		assert.True(t, names[data.Name] != "")
+		delete(names, data.Name)
+	}
+	assert.Equal(t, 0, len(names))
+	stopTestServer()
+}
+
+func Test_GetKeyValue(t *testing.T) {
+	startTestServer("")
+
+	HttpCreateBucket("b1", buckets.authsecret.secret)
+
+	// Secret not needed.
+	data := NewTestSetKeyData("b1", "g1", []byte("{game1}"))
+	data.AddAlias("p1:p2:g1")
+	data.AddAlias("p2:p1:g1")
+	resp := HttpSetKey(data, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// Get alias entry
+	resp = HttpGetKeyValue("b1", "p1:p2:g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+	body := ResponseBodyAsString(resp)
+	assert.Equal(t, "{game1}", body)
+
+	// Get regular entry
+	resp = HttpGetKeyValue("b1", "g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+	body = ResponseBodyAsString(resp)
+	assert.Equal(t, "{game1}", body)
+
+	// Get not found entry
+	resp = HttpGetKeyValue("b1", "g1xxx", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	defer resp.Body.Close()
+
+	// Get not found entry  bucket!
+	resp = HttpGetKeyValue("b1x", "g1xxx", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	defer resp.Body.Close()
+
+	stopTestServer()
+}
+
+func Test_Delete1(t *testing.T) {
+	startTestServer("")
+
+	HttpCreateBucket("b1", buckets.authsecret.secret)
+
+	// Secret not needed.
+	data := NewTestSetKeyData("b1", "g1", []byte("{game1}"))
+	data.AddAlias("p1:p2:g1")
+	data.AddAlias("p2:p1:g1")
+	resp := HttpSetKey(data, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// Get alias entry
+	resp = HttpGetKeyValue("b1", "p1:p2:g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+	body := ResponseBodyAsString(resp)
+	assert.Equal(t, "{game1}", body)
+
+	// Get regular entry
+	resp = HttpGetKeyValue("b1", "g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+	body = ResponseBodyAsString(resp)
+	assert.Equal(t, "{game1}", body)
+
+	// Delete
+	td := NewTestDeleteData("b1", "g1")
+	td.AddAlias("p1:p2:g1")
+	td.AddAlias("p2:p1:g1")
+	resp = HttpDeleteKey(td, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, "rec_deleted", "3")
+
+	// Get not found entry
+	resp = HttpGetKeyValue("b1", "g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	defer resp.Body.Close()
+
+	resp = HttpGetKeyValue("b1", "p2:p1:g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	defer resp.Body.Close()
+
+	stopTestServer()
+}
+
+func Test_Delete12_dont_delete_aliases(t *testing.T) {
+	startTestServer("")
+
+	HttpCreateBucket("b1", buckets.authsecret.secret)
+
+	// Secret not needed.
+	data := NewTestSetKeyData("b1", "g1", []byte("{game1}"))
+	data.AddAlias("p1:p2:g1")
+	data.AddAlias("p2:p1:g1")
+	resp := HttpSetKey(data, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// Get alias entry
+	resp = HttpGetKeyValue("b1", "p1:p2:g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+	body := ResponseBodyAsString(resp)
+	assert.Equal(t, "{game1}", body)
+
+	// Get regular entry
+	resp = HttpGetKeyValue("b1", "g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+	body = ResponseBodyAsString(resp)
+	assert.Equal(t, "{game1}", body)
+
+	// Delete
+	td := NewTestDeleteData("b1", "g1")
+	//td.AddAlias("p1:p2:g1")
+	//td.AddAlias("p2:p1:g1")
+	resp = HttpDeleteKey(td, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	ResponseBodyAsString(resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, "rec_deleted", "1")
+
+	// Get not found entry
+	resp = HttpGetKeyValue("b1", "g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	defer resp.Body.Close()
+
+	// Still not found. But takes space in DB
+	resp = HttpGetKeyValue("b1", "p2:p1:g1", buckets.authsecret.secret)
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	defer resp.Body.Close()
+
+	stopTestServer()
+}
+
+func Test_PostData1_no_aliases(t *testing.T) {
+	startTestServer("")
+
+	HttpCreateBucket("b1", buckets.authsecret.secret)
+
+	// Secret not needed.
+	data := NewTestSetKeyData("b1", "g1", []byte("{game1}"))
+	resp := HttpSetKey(data, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	// searchKeys
+	sk := NewTestSearchData("b1", "")
+	resp = HttpSearch(sk, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+
+	rdata := SearchResponseEntryFromResponse(resp)
+	assert.Equal(t, 1, len(rdata))
+	assert.Equal(t, "g1", rdata[0].Key)
+
+	// --- get with the data
+	sk = NewTestSearchData("b1", "")
+	sk.values = true
+	resp = HttpSearch(sk, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	rdata = SearchResponseEntryFromResponse(resp)
+	assert.Equal(t, 1, len(rdata))
+	assert.Equal(t, "g1", rdata[0].Key)
+	assert.Equal(t, "{game1}", rdata[0].Data)
+
 	stopTestServer()
 }
