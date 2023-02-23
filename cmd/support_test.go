@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
@@ -167,6 +168,7 @@ type TestSearchData struct {
 	skip    int
 	values  bool
 	explain bool
+	b64     bool
 }
 
 func (d *TestSearchData) setHeaders(req *http.Request) {
@@ -178,6 +180,9 @@ func (d *TestSearchData) setHeaders(req *http.Request) {
 	}
 	if d.explain {
 		req.Header.Set(HEADER_EXPLAIN_KEY, "1")
+	}
+	if d.b64 {
+		req.Header.Set(HEADER_B64_KEY, "1")
 	}
 	if d.skip > 0 {
 		req.Header.Set(HEADER_SKIP_KEY, fmt.Sprintf("%d", d.skip))
@@ -203,4 +208,12 @@ func stringToInt(sval string) int {
 		panic(e)
 	}
 	return v
+}
+
+func decodeB64(data string) string {
+	bytes, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		panic(err)
+	}
+	return string(bytes)
 }

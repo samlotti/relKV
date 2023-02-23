@@ -3,6 +3,7 @@ package cmd
 const (
 	BADGER_FLAG_ALIAS = 1
 
+	HEADER_B64_KEY            = "b64"
 	HEADER_SKIP_KEY           = "skip"
 	HEADER_MAX_KEY            = "max"
 	HEADER_EXPLAIN_KEY        = "explain"

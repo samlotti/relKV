@@ -23,7 +23,7 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 	skip := getHeaderKeyInt(HEADER_SKIP_KEY, 0, request)
 	max := getHeaderKeyInt(HEADER_MAX_KEY, math.MaxInt, request)
 	getValues := getHeaderKeyBool(HEADER_VALUES_KEY, request)
-	b64 := getHeaderKeyBool("b64", request)
+	b64 := getHeaderKeyBool(HEADER_B64_KEY, request)
 	segments := getSegments(getHeaderKey("segments", request))
 	explain := getHeaderKeyInt(HEADER_EXPLAIN_KEY, 0, request) == 1
 
@@ -70,9 +70,7 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 			item := it.Item()
 			key := item.Key()
 			keyStr := string(key)
-			if err != nil {
-				return err
-			}
+
 			kv := &KV{
 				Key:   keyStr,
 				Value: "",
@@ -97,7 +95,11 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 						}
 
 						err = aliasParent.Value(func(val []byte) error {
-							kv.Value = string(val)
+							if b64 {
+								kv.Value = base64.StdEncoding.EncodeToString(val)
+							} else {
+								kv.Value = string(val)
+							}
 							return nil
 						})
 						return err

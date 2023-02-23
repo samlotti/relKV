@@ -190,7 +190,7 @@ func Test_PostData1(t *testing.T) {
 	assert.Equal(t, 1, stringToInt(resp.Header.Get("ex_rows_selected")))
 	assert.Equal(t, 1, stringToInt(resp.Header.Get("ex_rows_skipped")))
 
-	// --- get skip -- explain
+	// --- get skip
 	sk = NewTestSearchData("b1", "")
 	sk.values = true
 	sk.explain = false
@@ -204,6 +204,36 @@ func Test_PostData1(t *testing.T) {
 	assert.Equal(t, 1, len(rdata))
 	assert.Equal(t, "p1:p2:g1", rdata[0].Key)
 	assert.Equal(t, "{game1}", rdata[0].Data)
+
+	// --- get skip -- b64
+	sk = NewTestSearchData("b1", "")
+	sk.values = true
+	sk.explain = false
+	sk.skip = 1
+	sk.b64 = true
+	sk.max = 1
+	resp = HttpSearch(sk, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	rdata = SearchResponseEntryFromResponse(resp)
+	assert.Equal(t, 1, len(rdata))
+	assert.Equal(t, "p1:p2:g1", rdata[0].Key)
+	assert.Equal(t, "{game1}", decodeB64(rdata[0].Data))
+
+	// --- get non alias
+	sk = NewTestSearchData("b1", "")
+	sk.values = true
+	sk.b64 = true
+	sk.prefix = "g1"
+	resp = HttpSearch(sk, buckets.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	rdata = SearchResponseEntryFromResponse(resp)
+	assert.Equal(t, 1, len(rdata))
+	assert.Equal(t, "g1", rdata[0].Key)
+	assert.Equal(t, "{game1}", decodeB64(rdata[0].Data))
 
 	stopTestServer()
 }
