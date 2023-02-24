@@ -91,4 +91,6 @@ Orphaned aliases with not show in search results.
 =====
 For calls that require a bucket, if it is not found then StatusBadRequest is returned.
 This is to differentiate between key not found -> StatusNotFound
+
+The getKeys will return error entries in this case since the alias was explicitly specified
 =====

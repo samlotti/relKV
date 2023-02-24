@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
-	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -108,8 +107,9 @@ func HttpSearch(sk *TestSearchData, token string) *http.Response {
 }
 
 type SearchResponseEntry struct {
-	Key  string `json:"key"`
-	Data string `json:"value,omitempty"`
+	Key   string `json:"key"`
+	Data  string `json:"value,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 func SearchResponseEntryFromResponse(resp *http.Response) []SearchResponseEntry {
@@ -178,13 +178,14 @@ func (tk *TestSetKeyData) SetAliasHeader(req *http.Request) {
 }
 
 type TestSearchData struct {
-	bucket  string
-	prefix  string
-	max     int
-	skip    int
-	values  bool
-	explain bool
-	b64     bool
+	bucket   string
+	prefix   string
+	max      int
+	skip     int
+	values   bool
+	explain  bool
+	b64      bool
+	segments []string
 }
 
 func (d *TestSearchData) setHeaders(req *http.Request) {
@@ -206,14 +207,21 @@ func (d *TestSearchData) setHeaders(req *http.Request) {
 	if d.max > 0 {
 		req.Header.Set(HEADER_MAX_KEY, fmt.Sprintf("%d", d.max))
 	}
+	if len(d.segments) > 0 {
+		req.Header.Set(HEADER_SEGMENT_KEY, strings.Join(d.segments, HEADER_SEGMENT_SEPARATOR))
+	}
 
+}
+
+func (d *TestSearchData) addSegment(segment string) {
+	d.segments = append(d.segments, segment)
 }
 
 func NewTestSearchData(bucket string, prefix string) *TestSearchData {
 	return &TestSearchData{
 		bucket: bucket,
 		prefix: prefix,
-		max:    math.MaxInt,
+		max:    0,
 		skip:   0,
 	}
 }
@@ -306,4 +314,49 @@ func (tk *TestDeleteData) SetAliasHeader(req *http.Request) {
 	if len(tk.aliases) > 0 {
 		req.Header.Set(HEADER_ALIAS_KEY, strings.Join(tk.aliases, HEADER_ALIAS_SEPARATOR))
 	}
+}
+
+type TestGetKeysData struct {
+	bucket string
+	keys   []string
+	b64    bool
+}
+
+func (d *TestGetKeysData) setHeaders(req *http.Request) {
+	if d.b64 {
+		req.Header.Set(HEADER_B64_KEY, "1")
+	}
+}
+
+func (d *TestGetKeysData) addKey(key string) {
+	d.keys = append(d.keys, key)
+}
+
+func NewTestGetKeysData(bucket string) *TestGetKeysData {
+	return &TestGetKeysData{
+		bucket: bucket,
+	}
+}
+
+func HttpGetKeys(sk *TestGetKeysData, secret string) *http.Response {
+	var payload []byte
+	var buf = bytes.NewBuffer(payload)
+	for _, key := range sk.keys {
+		buf.Write([]byte(key))
+		buf.Write([]byte("\n"))
+	}
+
+	req, err := http.NewRequest(http.MethodPost, buckets.getListenAddr()+"/get/"+sk.bucket, buf)
+	AddAuth(secret, req)
+	sk.setHeaders(req)
+
+	if err != nil {
+		panic(err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	return resp
+
 }

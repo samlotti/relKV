@@ -29,6 +29,7 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 	request.Body = http.MaxBytesReader(writer, request.Body, b.baseTableSize)
 
 	writer.Header().Set("content-type", "application/json")
+	writer.Header().Set(RESP_HEADER_KVDB_FUNCTION, "getKeys")
 	writer.Write([]byte("[\n"))
 
 	err = db.View(func(txn *badger.Txn) error {
@@ -39,7 +40,13 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		keys := strings.Split(string(body), "\n")
+
+		needComma := false
 		for _, key := range keys {
+
+			if len(key) == 0 {
+				continue
+			}
 
 			kv := &KV{
 				Key:   key,
@@ -50,27 +57,45 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 			item, err := txn.Get([]byte(key))
 			if err == nil {
 
-				err = item.Value(func(val []byte) error {
+				if item.UserMeta()&BADGER_FLAG_ALIAS == BADGER_FLAG_ALIAS {
+					err = item.Value(func(val []byte) error {
+						aliasParent, err := txn.Get(val)
+						if err != nil {
+							return err
+						}
 
-					if b64 {
-						kv.Value = base64.StdEncoding.EncodeToString(val)
-					} else {
-						kv.Value = string(val)
-					}
+						err = aliasParent.Value(func(val []byte) error {
+							if b64 {
+								kv.Value = base64.StdEncoding.EncodeToString(val)
+							} else {
+								kv.Value = string(val)
+							}
+							return nil
+						})
+						return err
+					})
 
-					return nil
-				})
+				} else {
+					err = item.Value(func(val []byte) error {
 
-				if err != nil {
-					fmt.Printf("Err1:%s\n", err.Error())
-					if err == badger.ErrKeyNotFound {
-						err = nil
-						kv.Error = "not found"
-					}
+						if b64 {
+							kv.Value = base64.StdEncoding.EncodeToString(val)
+						} else {
+							kv.Value = string(val)
+						}
+
+						return nil
+					})
 				}
-			} else {
+			}
+
+			if err != nil {
 				kv.Error = err.Error()
 				err = nil
+			}
+
+			if needComma {
+				writer.Write([]byte(",\n"))
 			}
 
 			data, err := json.Marshal(kv)
@@ -78,8 +103,10 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 				fmt.Printf("Err:%s\n", err.Error())
 				return err
 			}
+			writer.Write([]byte("  "))
 			writer.Write(data)
-			writer.Write([]byte("\n"))
+			needComma = true
+
 		}
 		return err
 
@@ -89,5 +116,5 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 		fmt.Printf("Err:%s\n", err.Error())
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 	}
-	writer.Write([]byte("]\n"))
+	writer.Write([]byte("\n]\n"))
 }

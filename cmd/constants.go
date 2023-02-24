@@ -11,5 +11,7 @@ const (
 	HEADER_VALUES_KEY         = "values"
 	HEADER_ALIAS_KEY          = "aliases"
 	HEADER_ALIAS_SEPARATOR    = ";"
+	HEADER_SEGMENT_KEY        = "segments"
+	HEADER_SEGMENT_SEPARATOR  = ":"
 	RESP_HEADER_KVDB_FUNCTION = "func"
 )

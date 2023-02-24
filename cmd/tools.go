@@ -151,12 +151,12 @@ func (e *Environment) UseMetrics() bool {
 func getSegments(segmentsArg string) []string {
 	var segments []string
 	if len(segmentsArg) > 0 {
-		for _, segment := range strings.Split(segmentsArg, ":") {
+		for _, segment := range strings.Split(segmentsArg, HEADER_SEGMENT_SEPARATOR) {
 			if len(segment) == 0 {
 				continue
 			}
 			// Do this once instead of on each check
-			segments = append(segments, ":"+segment+":")
+			segments = append(segments, HEADER_SEGMENT_SEPARATOR+segment+HEADER_SEGMENT_SEPARATOR)
 		}
 	}
 	return segments
@@ -166,7 +166,7 @@ func getSegments(segmentsArg string) []string {
 // expects all segments to start and end with :
 // so :game1234:user1:user2:user3:   match  :user1:
 func segmentMatch(key string, segments []string) bool {
-	fname := ":" + getFNameFromKey(key) + ":"
+	fname := HEADER_SEGMENT_SEPARATOR + getFNameFromKey(key) + HEADER_SEGMENT_SEPARATOR
 	for _, seg := range segments {
 		if !strings.Contains(fname, seg) {
 			return false

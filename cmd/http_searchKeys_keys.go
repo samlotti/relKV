@@ -24,7 +24,7 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 	max := getHeaderKeyInt(HEADER_MAX_KEY, math.MaxInt, request)
 	getValues := getHeaderKeyBool(HEADER_VALUES_KEY, request)
 	b64 := getHeaderKeyBool(HEADER_B64_KEY, request)
-	segments := getSegments(getHeaderKey("segments", request))
+	segments := getSegments(getHeaderKey(HEADER_SEGMENT_KEY, request))
 	explain := getHeaderKeyInt(HEADER_EXPLAIN_KEY, 0, request) == 1
 
 	ex_rows_read := 0
