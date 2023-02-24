@@ -15,7 +15,7 @@ import (
 
 type BucketName string
 
-var buckets *BucketsDb
+var BucketsInstance *BucketsDb
 
 func BootServer(version string, readyChannel chan *BucketsDb) {
 	log.Printf("Starting kvDb %s\n", version)
@@ -43,41 +43,41 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 		log.SetOutput(f)
 	}
 
-	buckets = &BucketsDb{
+	BucketsInstance = &BucketsDb{
 		logfile:        logFile,
 		listenAddrPort: listen,
-		serverState:    Starting,
+		ServerState:    Starting,
 		baseTableSize:  8 << 20, // 8MB
 		dbPath:         EnvironmentInstance.GetEnv("DB_PATH", ""),
 		buckets:        EnvironmentInstance.GetBucketArray("BUCKETS"),
 		allowCreate:    EnvironmentInstance.GetBoolEnv("ALLOW_CREATE_DB"),
 	}
 
-	buckets.Init()
-	stats.init()
+	BucketsInstance.Init()
+	StatsInstance.init()
 
-	buckets.openDBBuckets()
+	BucketsInstance.openDBBuckets()
 
-	defer buckets.Close()
+	defer BucketsInstance.Close()
 
-	go buckets.runGC()
+	go BucketsInstance.runGC()
 
-	BackupsInit(buckets)
-	go backupsInstance.run()
+	//cmd.BackupsInit(BucketsInstance)
+	//go cmd.BackupsInstance.Run()
 
 	log.Printf("Listening on:%s", listen)
 
 	srv := http.Server{
 		Addr:              listen,
-		Handler:           buckets.newHTTPRouter(),
+		Handler:           BucketsInstance.newHTTPRouter(),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	go func() {
-		buckets.stopChan = make(chan os.Signal, 1)
+		BucketsInstance.stopChan = make(chan os.Signal, 1)
 
-		signal.Notify(buckets.stopChan, os.Interrupt, syscall.SIGTERM)
-		sig := <-buckets.stopChan
+		signal.Notify(BucketsInstance.stopChan, os.Interrupt, syscall.SIGTERM)
+		sig := <-BucketsInstance.stopChan
 		log.Println("shutdown:", sig)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -86,12 +86,12 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Fatalf("HTTP server shutdown failed:%+s", err)
 		}
-		buckets.serverState = Stopped
+		BucketsInstance.ServerState = Stopped
 	}()
 
 	log.Println("sending ready")
-	buckets.serverState = Running
-	readyChannel <- buckets
+	BucketsInstance.ServerState = Running
+	readyChannel <- BucketsInstance
 	log.Println("sent ready")
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

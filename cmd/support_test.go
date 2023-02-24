@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	. "kvDb/common"
 	"net/http"
 	"os"
 	"strconv"
@@ -28,7 +29,7 @@ func AddAuth(token string, req *http.Request) {
 
 func HttpCreateBucket(bname string, token string) *http.Response {
 	var payload []byte
-	req, err := http.NewRequest(http.MethodPut, buckets.getListenAddr()+"/"+bname, bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodPut, BucketsInstance.getListenAddr()+"/"+bname, bytes.NewBuffer(payload))
 
 	AddAuth(token, req)
 
@@ -44,7 +45,7 @@ func HttpCreateBucket(bname string, token string) *http.Response {
 
 func HttpStatus(token string) *http.Response {
 	var payload []byte
-	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/status", bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodGet, BucketsInstance.getListenAddr()+"/status", bytes.NewBuffer(payload))
 
 	AddAuth(token, req)
 
@@ -59,9 +60,14 @@ func HttpStatus(token string) *http.Response {
 }
 
 func HttpSetKey(data *TestSetKeyData, token string) *http.Response {
-	req, err := http.NewRequest(http.MethodPost, buckets.getListenAddr()+"/"+data.bucket+"/"+data.key, bytes.NewBuffer(data.data))
+	req, err := http.NewRequest(http.MethodPost, BucketsInstance.getListenAddr()+"/"+data.bucket+"/"+data.key, bytes.NewBuffer(data.data))
+	if err != nil {
+		panic(err)
+	}
 	AddAuth(token, req)
 	data.SetAliasHeader(req)
+
+	fmt.Printf("%v\n", req)
 
 	if err != nil {
 		panic(err)
@@ -75,7 +81,7 @@ func HttpSetKey(data *TestSetKeyData, token string) *http.Response {
 
 func HttpDeleteKey(data *TestDeleteData, token string) *http.Response {
 	var payload []byte
-	req, err := http.NewRequest(http.MethodDelete, buckets.getListenAddr()+"/"+data.bucket+"/"+data.key, bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodDelete, BucketsInstance.getListenAddr()+"/"+data.bucket+"/"+data.key, bytes.NewBuffer(payload))
 	AddAuth(token, req)
 	data.SetAliasHeader(req)
 
@@ -91,7 +97,7 @@ func HttpDeleteKey(data *TestDeleteData, token string) *http.Response {
 
 func HttpSearch(sk *TestSearchData, token string) *http.Response {
 	var payload []byte
-	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/"+sk.bucket, bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodGet, BucketsInstance.getListenAddr()+"/"+sk.bucket, bytes.NewBuffer(payload))
 	AddAuth(token, req)
 	sk.setHeaders(req)
 
@@ -144,11 +150,11 @@ func startTestServer(testenv string) {
 	readyChannel := make(chan *BucketsDb)
 	go BootServer("test", readyChannel)
 	<-readyChannel
-	buckets.WaitTillStarted()
+	BucketsInstance.WaitTillStarted()
 
 }
 func stopTestServer() {
-	buckets.shutDownServer()
+	BucketsInstance.shutDownServer()
 	fmt.Printf("Server shut down\n")
 }
 
@@ -217,10 +223,10 @@ func (d *TestSearchData) addSegment(segment string) {
 	d.segments = append(d.segments, segment)
 }
 
-func NewTestSearchData(bucket string, prefix string) *TestSearchData {
+func NewTestSearchData(bucket string) *TestSearchData {
 	return &TestSearchData{
 		bucket: bucket,
-		prefix: prefix,
+		prefix: "",
 		max:    0,
 		skip:   0,
 	}
@@ -244,7 +250,7 @@ func decodeB64(data string) string {
 
 func HttpListBuckets(token string) *http.Response {
 	var payload []byte
-	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/", bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodGet, BucketsInstance.getListenAddr()+"/", bytes.NewBuffer(payload))
 	AddAuth(token, req)
 
 	if err != nil {
@@ -272,7 +278,7 @@ func ListBucketResponseEntryFromResponse(resp *http.Response) []BucketData {
 
 func HttpGetKeyValue(bucket string, key string, token string) *http.Response {
 	var payload []byte
-	req, err := http.NewRequest(http.MethodGet, buckets.getListenAddr()+"/"+bucket+"/"+key, bytes.NewBuffer(payload))
+	req, err := http.NewRequest(http.MethodGet, BucketsInstance.getListenAddr()+"/"+bucket+"/"+key, bytes.NewBuffer(payload))
 	AddAuth(token, req)
 
 	if err != nil {
@@ -346,7 +352,7 @@ func HttpGetKeys(sk *TestGetKeysData, secret string) *http.Response {
 		buf.Write([]byte("\n"))
 	}
 
-	req, err := http.NewRequest(http.MethodPost, buckets.getListenAddr()+"/get/"+sk.bucket, buf)
+	req, err := http.NewRequest(http.MethodPost, BucketsInstance.getListenAddr()+"/get/"+sk.bucket, buf)
 	AddAuth(secret, req)
 	sk.setHeaders(req)
 

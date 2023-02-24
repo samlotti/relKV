@@ -7,6 +7,7 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
 	"io"
+	. "kvDb/common"
 	"net/http"
 	"strings"
 )
@@ -57,7 +58,7 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 			item, err := txn.Get([]byte(key))
 			if err == nil {
 
-				if item.UserMeta()&BADGER_FLAG_ALIAS == BADGER_FLAG_ALIAS {
+				if isAlias(item) {
 					err = item.Value(func(val []byte) error {
 						aliasParent, err := txn.Get(val)
 						if err != nil {

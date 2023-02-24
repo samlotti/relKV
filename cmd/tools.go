@@ -2,15 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/dgraph-io/badger/v3"
+	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
+	. "kvDb/common"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
 )
 
 type Environment struct {
@@ -144,10 +144,6 @@ func getHeaderKeyInt(key string, dflt int, r *http.Request) int {
 	return val
 }
 
-func (e *Environment) UseMetrics() bool {
-	return EnvironmentInstance.GetBoolEnv("USE_METRICS")
-}
-
 func getSegments(segmentsArg string) []string {
 	var segments []string
 	if len(segmentsArg) > 0 {
@@ -184,21 +180,6 @@ func getFNameFromKey(key string) string {
 	return sections[len(sections)-1]
 }
 
-func createBackupFilename(name BucketName, addDay bool, addHour bool) string {
-	n := string(name)
-	if addDay {
-		n = fmt.Sprintf("%s_%02d", n, time.Now().Day())
-	}
-	if addHour {
-		n = fmt.Sprintf("%s_%02d", n, time.Now().Hour())
-	}
-	return n + ".bak"
-}
-
-func addZipToFilename(name string) string {
-	return name + ".zip"
-}
-
 func validateBucketName(bname string) bool {
 	if strings.ToLower(bname) != bname {
 		return false
@@ -220,4 +201,8 @@ func validateBucketName(bname string) bool {
 	}
 	return true
 
+}
+
+func isAlias(item *badger.Item) bool {
+	return item.UserMeta()&BADGER_FLAG_ALIAS == BADGER_FLAG_ALIAS
 }

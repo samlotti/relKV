@@ -1,6 +1,9 @@
 package cmd
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 import "github.com/stretchr/testify/assert"
 
 func TestSegments(t *testing.T) {
@@ -18,5 +21,13 @@ func TestSegments(t *testing.T) {
 	seg = getSegments("test:t2")
 	assert.True(t, segmentMatch("2023/games/game12:t1:test:t2", seg))
 	assert.False(t, segmentMatch("2023/games/game12:t1:test:t21", seg))
+
+	os.Setenv("test", "12,34,56")
+	arr := EnvironmentInstance.GetIntArray("test")
+	assert.Equal(t, 3, len(arr))
+	assert.Equal(t, 12, arr[0])
+	assert.Equal(t, 34, arr[1])
+	assert.Equal(t, 56, arr[2])
+	os.Unsetenv("test")
 
 }

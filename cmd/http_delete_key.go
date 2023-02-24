@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
+	. "kvDb/common"
 	"net/http"
 	"strings"
 	"sync/atomic"
@@ -66,12 +67,12 @@ func (b *BucketsDb) delKey(writer http.ResponseWriter, request *http.Request) {
 		if err == badger.ErrKeyNotFound {
 			http.Error(writer, badger.ErrKeyNotFound.Error(), http.StatusNotFound)
 		} else {
-			atomic.AddInt64(&stats.bucketStats[BucketName(bucket)].numError, 1)
-			stats.bucketStats[BucketName(bucket)].lastEMessage = err.Error()
+			atomic.AddInt64(&StatsInstance.bucketStats[BucketName(bucket)].numError, 1)
+			StatsInstance.bucketStats[BucketName(bucket)].lastEMessage = err.Error()
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
-		atomic.AddInt64(&stats.bucketStats[BucketName(bucket)].numDelete, 1)
+		atomic.AddInt64(&StatsInstance.bucketStats[BucketName(bucket)].numDelete, 1)
 		writer.WriteHeader(http.StatusOK)
 	}
 }

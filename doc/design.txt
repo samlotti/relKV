@@ -94,3 +94,9 @@ This is to differentiate between key not found -> StatusNotFound
 
 The getKeys will return error entries in this case since the alias was explicitly specified
 =====
+
+Duplicate keys for aliases.
+It is possible that on the creation of a new key or the update of a key that a duplicate can exist.
+
+If during write a duplicate is detected the response will be:
+and an error returned headerkey -> duplicate_key  value is the alias key.

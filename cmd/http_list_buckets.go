@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"encoding/json"
+	. "kvDb/common"
 	"net/http"
 )
 
 func (b *BucketsDb) listBuckets(writer http.ResponseWriter, request *http.Request) {
 	var buckets []*BucketData
 
-	for name := range b.dbBucket {
+	for name := range b.DbBucket {
 		bk := &BucketData{
 			Name: string(name),
 		}

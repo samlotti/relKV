@@ -33,7 +33,7 @@ func (b *BucketsDb) getKey(writer http.ResponseWriter, request *http.Request) {
 			return err
 		}
 
-		if item.UserMeta()&BADGER_FLAG_ALIAS == BADGER_FLAG_ALIAS {
+		if isAlias(item) {
 			err := item.Value(func(val []byte) error {
 				aliasParent, err := txn.Get(val)
 				if err != nil {

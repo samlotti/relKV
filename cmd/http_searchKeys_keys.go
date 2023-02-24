@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
+	. "kvDb/common"
 	"math"
 	"net/http"
 )
@@ -87,7 +88,7 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 			// Resolve to the real value if alias!
 			// If not found ignore the alias entry
 			if getValues {
-				if item.UserMeta()&BADGER_FLAG_ALIAS == BADGER_FLAG_ALIAS {
+				if isAlias(item) {
 					err := item.Value(func(val []byte) error {
 						aliasParent, err := txn.Get(val)
 						if err != nil {

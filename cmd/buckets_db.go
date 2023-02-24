@@ -27,12 +27,12 @@ const Stopped ServerState = 2
 
 type BucketsDb struct {
 	listenAddrPort string
-	dbBucket       map[BucketName]*badger.DB
+	DbBucket       map[BucketName]*badger.DB
 	dbPath         string
 	allowCreate    bool
 	baseTableSize  int64
 	buckets        []BucketName
-	serverState    ServerState
+	ServerState    ServerState
 	stopChan       chan os.Signal
 	authsecret     *AuthSecret
 	logfile        string
@@ -42,7 +42,7 @@ func (b *BucketsDb) shutDownServer() {
 	b.stopChan <- syscall.SIGINT
 	for {
 		time.Sleep(100 * time.Millisecond)
-		if b.serverState == Stopped {
+		if b.ServerState == Stopped {
 			return
 		}
 	}
@@ -51,7 +51,7 @@ func (b *BucketsDb) shutDownServer() {
 func (b *BucketsDb) WaitTillStopped() {
 	for {
 		time.Sleep(100 * time.Millisecond)
-		if b.serverState == Stopped {
+		if b.ServerState == Stopped {
 			return
 		}
 	}
@@ -78,7 +78,7 @@ func (b *BucketsDb) Init() {
 
 func (b *BucketsDb) openDBBuckets() {
 
-	// Read the data directory and look for buckets
+	// Read the data directory and look for BucketsInstance
 	dirs, err := os.ReadDir(b.dbPath)
 	if err != nil {
 		panic(err)
@@ -89,7 +89,7 @@ func (b *BucketsDb) openDBBuckets() {
 		}
 	}
 
-	b.dbBucket = make(map[BucketName]*badger.DB)
+	b.DbBucket = make(map[BucketName]*badger.DB)
 	for _, bname := range b.buckets {
 		err := b.Open(BucketName(bname))
 		if err != nil {
@@ -113,20 +113,20 @@ func (b *BucketsDb) Open(name BucketName) error {
 		return err
 	}
 
-	b.dbBucket[name] = db
+	b.DbBucket[name] = db
 
 	return nil
 }
 
 func (b *BucketsDb) getDB(bucket string) (*badger.DB, error) {
-	if db, ok := b.dbBucket[BucketName(bucket)]; ok {
+	if db, ok := b.DbBucket[BucketName(bucket)]; ok {
 		return db, nil
 	}
 	return nil, errors.New("bucket not found")
 }
 
 func (b *BucketsDb) Close() {
-	for _, db := range b.dbBucket {
+	for _, db := range b.DbBucket {
 		db.Close()
 	}
 }
@@ -134,10 +134,10 @@ func (b *BucketsDb) Close() {
 func (b *BucketsDb) runGC() {
 	for {
 		time.Sleep(10 * time.Minute)
-		if b.serverState == Stopped {
+		if b.ServerState == Stopped {
 			return
 		}
-		for name, db := range b.dbBucket {
+		for name, db := range b.DbBucket {
 			if err := db.RunValueLogGC(0.7); err != nil {
 				if err != badger.ErrNoRewrite {
 					log.Printf("error running gc on:%s", name)
@@ -168,10 +168,10 @@ func (b *BucketsDb) WaitTillStarted() {
 			continue
 		}
 
-		if b.serverState == Running {
+		if b.ServerState == Running {
 			return
 		}
-		if b.serverState == Stopped {
+		if b.ServerState == Stopped {
 			panic("server stopped while waiting for it sto start")
 		}
 	}
@@ -187,5 +187,5 @@ func (b *BucketsDb) addBucket(name BucketName) {
 		}
 	}
 	b.buckets = append(b.buckets, BucketName(name))
-	stats.addBucket(name)
+	StatsInstance.addBucket(name)
 }

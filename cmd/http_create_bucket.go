@@ -5,21 +5,20 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	"strings"
 )
 
 func (b *BucketsDb) createBucket(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
 
-	bucket = strings.TrimSpace(strings.ToLower(bucket))
+	// bucket = strings.TrimSpace(strings.ToLower(bucket))
 
 	if !validateBucketName(bucket) {
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if b.dbBucket[BucketName(bucket)] != nil {
+	if b.DbBucket[BucketName(bucket)] != nil {
 		writer.WriteHeader(http.StatusCreated)
 		return
 	}
