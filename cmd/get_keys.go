@@ -22,7 +22,7 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 	//fmt.Printf("bucket:%s\n", bucket)
 	bdb, err := b.getDB(bucket)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		SendError(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	db = bdb
@@ -115,7 +115,7 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		fmt.Printf("Err:%s\n", err.Error())
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		SendError(writer, err.Error(), http.StatusInternalServerError)
 	}
 	writer.Write([]byte("\n]\n"))
 }

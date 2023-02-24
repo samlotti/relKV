@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
+	"kvDb/common"
 	"net/http"
 )
 
@@ -10,13 +11,15 @@ func (b *BucketsDb) getKey(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
 
+	writer.Header().Set(common.RESP_HEADER_KVDB_FUNCTION, "getKey")
+
 	var db *badger.DB
 
 	var key []byte
 
 	bdb, err := b.getDB(bucket)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		SendError(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	db = bdb
@@ -27,7 +30,7 @@ func (b *BucketsDb) getKey(writer http.ResponseWriter, request *http.Request) {
 		item, err := txn.Get(key)
 		if err != nil {
 			if err == badger.ErrKeyNotFound {
-				http.Error(writer, err.Error(), http.StatusNotFound)
+				SendError(writer, err.Error(), http.StatusNotFound)
 				err = nil
 			}
 			return err
@@ -48,7 +51,7 @@ func (b *BucketsDb) getKey(writer http.ResponseWriter, request *http.Request) {
 			})
 			// ??
 			if err != nil {
-				http.Error(writer, err.Error(), http.StatusNotFound)
+				SendError(writer, err.Error(), http.StatusNotFound)
 				return nil
 			}
 
@@ -63,6 +66,6 @@ func (b *BucketsDb) getKey(writer http.ResponseWriter, request *http.Request) {
 	})
 
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		SendError(writer, err.Error(), http.StatusInternalServerError)
 	}
 }

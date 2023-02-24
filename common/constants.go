@@ -15,4 +15,5 @@ const (
 	HEADER_SEGMENT_SEPARATOR    = ":"
 	RESP_HEADER_KVDB_FUNCTION   = "func"
 	RESP_HEADER_DUPLICATE_ERROR = "duplicate_key"
+	RESP_HEADER_ERROR_MSG       = "error_msg"
 )

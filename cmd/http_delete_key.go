@@ -22,7 +22,7 @@ func (b *BucketsDb) delKey(writer http.ResponseWriter, request *http.Request) {
 
 	bdb, err := b.getDB(bucket)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		SendError(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	db = bdb
@@ -31,7 +31,7 @@ func (b *BucketsDb) delKey(writer http.ResponseWriter, request *http.Request) {
 	keyS := string(key)
 
 	if len(keyS) == 0 {
-		http.Error(writer, "key is required", http.StatusBadRequest)
+		SendError(writer, "key is required", http.StatusBadRequest)
 		return
 	}
 
@@ -65,11 +65,11 @@ func (b *BucketsDb) delKey(writer http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		if err == badger.ErrKeyNotFound {
-			http.Error(writer, badger.ErrKeyNotFound.Error(), http.StatusNotFound)
+			SendError(writer, badger.ErrKeyNotFound.Error(), http.StatusNotFound)
 		} else {
 			atomic.AddInt64(&StatsInstance.bucketStats[BucketName(bucket)].numError, 1)
 			StatsInstance.bucketStats[BucketName(bucket)].lastEMessage = err.Error()
-			http.Error(writer, err.Error(), http.StatusInternalServerError)
+			SendError(writer, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
 		atomic.AddInt64(&StatsInstance.bucketStats[BucketName(bucket)].numDelete, 1)

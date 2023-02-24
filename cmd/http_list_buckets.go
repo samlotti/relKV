@@ -27,7 +27,7 @@ func (b *BucketsDb) listBuckets(writer http.ResponseWriter, request *http.Reques
 
 	data, err := json.Marshal(buckets)
 	if err != nil {
-		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		SendError(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

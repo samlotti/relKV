@@ -1,6 +1,9 @@
 package cmd
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 type loggingLevel int
 
@@ -14,6 +17,22 @@ const (
 	WARNING
 	ERROR
 )
+
+func convertLogLevel(slevel string) loggingLevel {
+	if slevel == "DEBUG" {
+		return DEBUG
+	}
+	if slevel == "INFO" {
+		return INFO
+	}
+	if slevel == "WARNING" {
+		return WARNING
+	}
+	if slevel == "ERROR" {
+		return ERROR
+	}
+	panic(fmt.Sprintf("invalid logger level, found:%s", slevel))
+}
 
 func DefaultLogger(level loggingLevel) *BadgerLogger {
 	return &BadgerLogger{level: level}

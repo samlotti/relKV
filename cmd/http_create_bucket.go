@@ -29,7 +29,7 @@ func (b *BucketsDb) createBucket(writer http.ResponseWriter, request *http.Reque
 		writer.WriteHeader(http.StatusCreated)
 	} else {
 		log.Println(fmt.Sprintf("error creating bucket:%s, %s", bucket, err))
-		http.Error(writer, "error creating bucket", http.StatusInternalServerError)
+		SendError(writer, "error creating bucket", http.StatusInternalServerError)
 	}
 
 }

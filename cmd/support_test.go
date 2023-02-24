@@ -76,6 +76,7 @@ func HttpSetKey(data *TestSetKeyData, token string) *http.Response {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("resp:%v\n", resp)
 	return resp
 }
 

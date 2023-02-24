@@ -845,7 +845,7 @@ func Test_PostData1_segment_search_with_paths(t *testing.T) {
 
 	HttpCreateBucket("b1", BucketsInstance.authsecret.secret)
 
-	data := NewTestSetKeyData("b1", "games/g1", []byte("{game1}"))
+	data := NewTestSetKeyData("b1", "games/g1:45", []byte("{game1}"))
 	data.AddAlias("games/p1:p2:g1")
 	data.AddAlias("games/p2:p1:g1")
 	data.AddAlias("games/p5:p6:g1")
@@ -884,6 +884,105 @@ func Test_PostData1_segment_search_with_paths(t *testing.T) {
 	assert.Equal(t, 2, len(rdata))
 	assert.Equal(t, "games/p1:p2:g1", rdata[0].Key)
 	assert.Equal(t, "games/p2:p1:g1", rdata[1].Key)
+
+	// searchKeys - for player 1 and p2, should get 2 games
+	resp = HttpGetKeyValue("b1", "games/g1:45", BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "getKey")
+
+	rstr := ResponseBodyAsString(resp)
+	assert.Equal(t, "{game1}", rstr)
+
+	stopTestServer()
+}
+
+// Test_PostData_duplicate_test2 - test alias try to override a non alias
+func Test_PostData_update(t *testing.T) {
+	startTestServer("")
+
+	HttpCreateBucket("b1", BucketsInstance.authsecret.secret)
+
+	data := NewTestSetKeyData("b1", "g1", []byte("{game1}"))
+	data.AddAlias("p1:p2:g1")
+	data.AddAlias("p2:p1:g1")
+	resp := HttpSetKey(data, BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	data = NewTestSetKeyData("b1", "g1", []byte("{game1b}"))
+	data.AddAlias("p1:p2:g1")
+	data.AddAlias("p2:p1:g1")
+	resp = HttpSetKey(data, BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	sk := NewTestSearchData("b1")
+	sk.values = true
+	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	rdata := SearchResponseEntryFromResponse(resp)
+
+	// Should only have the 4 records
+	assert.Equal(t, 3, len(rdata))
+	assert.Equal(t, "g1", rdata[0].Key)
+	assert.Equal(t, "{game1b}", rdata[0].Data)
+	assert.Equal(t, "p1:p2:g1", rdata[1].Key)
+	assert.Equal(t, "{game1b}", rdata[1].Data)
+
+	stopTestServer()
+}
+
+// Test_PostData_duplicate_test2 - test alias try to override a non alias
+func Test_PostData_update_alias_autoupdate(t *testing.T) {
+	startTestServer("")
+
+	HttpCreateBucket("b1", BucketsInstance.authsecret.secret)
+
+	data := NewTestSetKeyData("b1", "g1", []byte("{game1}"))
+	data.AddAlias("p1:p2:g1")
+	data.AddAlias("p2:p1:g1")
+	resp := HttpSetKey(data, BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	data = NewTestSetKeyData("b1", "g1", []byte("{game1b}"))
+	//data.AddAlias("p1:p2:g1")
+	//data.AddAlias("p2:p1:g1")
+	resp = HttpSetKey(data, BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+
+	sk := NewTestSearchData("b1")
+	sk.values = true
+	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	rdata := SearchResponseEntryFromResponse(resp)
+
+	// Should only have the 4 records
+	assert.Equal(t, 3, len(rdata))
+	assert.Equal(t, "g1", rdata[0].Key)
+	assert.Equal(t, "{game1b}", rdata[0].Data)
+	assert.Equal(t, "p1:p2:g1", rdata[1].Key)
+	assert.Equal(t, "{game1b}", rdata[1].Data)
+
+	stopTestServer()
+}
+
+func Test_PostData_wrong_bucket(t *testing.T) {
+	startTestServer("")
+
+	data := NewTestSetKeyData("b1", "g1", []byte("{game1}"))
+	data.AddAlias("p1:p2:g1")
+	data.AddAlias("p2:p1:g1")
+	resp := HttpSetKey(data, BucketsInstance.authsecret.secret)
+	defer resp.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assertHeader(t, resp, RESP_HEADER_ERROR_MSG, "bucket not found")
 
 	stopTestServer()
 }

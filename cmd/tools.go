@@ -204,5 +204,13 @@ func validateBucketName(bname string) bool {
 }
 
 func isAlias(item *badger.Item) bool {
+	if item == nil {
+		return false
+	}
 	return item.UserMeta()&BADGER_FLAG_ALIAS == BADGER_FLAG_ALIAS
+}
+
+func SendError(writer http.ResponseWriter, message string, status int) {
+	writer.Header().Set(RESP_HEADER_ERROR_MSG, message)
+	http.Error(writer, message, status)
 }

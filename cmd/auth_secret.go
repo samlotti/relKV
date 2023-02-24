@@ -21,7 +21,7 @@ func (mw *AuthSecret) Middleware(next http.Handler) http.Handler {
 		//fmt.Printf("tkn:%s\n", tkn)
 		//fmt.Printf("sec:%s\n", mw.secret)
 		if mw.secret != tkn {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			SendError(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		} else {
 			next.ServeHTTP(w, r)
 		}

@@ -36,6 +36,7 @@ type BucketsDb struct {
 	stopChan       chan os.Signal
 	authsecret     *AuthSecret
 	logfile        string
+	logger         *BadgerLogger
 }
 
 func (b *BucketsDb) shutDownServer() {
@@ -74,6 +75,8 @@ func (b *BucketsDb) Init() {
 		log.Printf("directory not found, %s, please create it first", b.dbPath)
 		panic(err)
 	}
+
+	b.logger = DefaultLogger(convertLogLevel(EnvironmentInstance.GetEnv("LOG_LEVEL", "INFO")))
 }
 
 func (b *BucketsDb) openDBBuckets() {
@@ -102,7 +105,7 @@ func (b *BucketsDb) openDBBuckets() {
 func (b *BucketsDb) Open(name BucketName) error {
 	dbPath := filepath.Join(b.dbPath, string(name))
 	dbOpts := badger.DefaultOptions(dbPath)
-	dbOpts = dbOpts.WithLogger(DefaultLogger(INFO))
+	dbOpts = dbOpts.WithLogger(b.logger)
 	dbOpts = dbOpts.WithValueLogFileSize(128 << 20) // 128MB
 	dbOpts = dbOpts.WithIndexCacheSize(128 << 20)   // 128MB
 	dbOpts = dbOpts.WithBaseTableSize(b.baseTableSize)
