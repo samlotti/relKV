@@ -3,15 +3,15 @@ package cmd
 import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
-	"kvDb/common"
 	"net/http"
+	"relKV/common"
 )
 
 func (b *BucketsDb) getKey(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
 
-	writer.Header().Set(common.RESP_HEADER_KVDB_FUNCTION, "getKey")
+	writer.Header().Set(common.RESP_HEADER_RELDB_FUNCTION, "getKey")
 
 	var db *badger.DB
 

@@ -1,5 +1,8 @@
-# kvDb
- key value database with alias support / backup
+# relKV
+ key value database with
+ * relationship support (via segments)
+ * alias support 
+ * backup
 
 A key value datastore with features:
 

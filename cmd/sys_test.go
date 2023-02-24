@@ -3,9 +3,9 @@ package cmd
 import (
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
-	. "kvDb/common"
 	"net/http"
 	"os"
+	. "relKV/common"
 	"strings"
 	"testing"
 )
@@ -135,7 +135,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata := SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 3, len(rdata))
@@ -149,7 +149,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 3, len(rdata))
 	assert.Equal(t, "g1", rdata[0].Key)
@@ -166,7 +166,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 1, len(rdata))
 	assert.Equal(t, "p1:p2:g1", rdata[0].Key)
@@ -180,7 +180,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 1, stringToInt(resp.Header.Get("ex_row_read")))
@@ -194,7 +194,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 3, stringToInt(resp.Header.Get("ex_row_read")))
@@ -210,7 +210,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 2, stringToInt(resp.Header.Get("ex_row_read")))
@@ -226,7 +226,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 3, stringToInt(resp.Header.Get("ex_row_read")))
@@ -242,7 +242,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 1, len(rdata))
 	assert.Equal(t, "p1:p2:g1", rdata[0].Key)
@@ -258,7 +258,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 1, len(rdata))
 	assert.Equal(t, "p1:p2:g1", rdata[0].Key)
@@ -272,7 +272,7 @@ func Test_PostData1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 1, len(rdata))
 	assert.Equal(t, "g1", rdata[0].Key)
@@ -465,7 +465,7 @@ func Test_PostData1_no_aliases(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata := SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 1, len(rdata))
@@ -477,7 +477,7 @@ func Test_PostData1_no_aliases(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 1, len(rdata))
 	assert.Equal(t, "g1", rdata[0].Key)
@@ -527,7 +527,7 @@ func Test_PostData1_segment_search(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata := SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 4, len(rdata))
@@ -541,7 +541,7 @@ func Test_PostData1_segment_search(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	assert.Equal(t, 4, stringToInt(resp.Header.Get("ex_row_read")))
 	assert.Equal(t, 4, stringToInt(resp.Header.Get("ex_rows_selected")))
 	assert.Equal(t, 0, stringToInt(resp.Header.Get("ex_rows_skipped")))
@@ -555,7 +555,7 @@ func Test_PostData1_segment_search(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 2, len(rdata))
@@ -567,7 +567,7 @@ func Test_PostData1_segment_search(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	assert.Equal(t, 4, stringToInt(resp.Header.Get("ex_row_read")))
 	assert.Equal(t, 2, stringToInt(resp.Header.Get("ex_rows_selected")))
 	assert.Equal(t, 0, stringToInt(resp.Header.Get("ex_rows_skipped")))
@@ -582,7 +582,7 @@ func Test_PostData1_segment_search(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 2, len(rdata))
@@ -594,7 +594,7 @@ func Test_PostData1_segment_search(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	assert.Equal(t, 2, stringToInt(resp.Header.Get("ex_row_read")))
 	assert.Equal(t, 2, stringToInt(resp.Header.Get("ex_rows_selected")))
 	assert.Equal(t, 0, stringToInt(resp.Header.Get("ex_rows_skipped")))
@@ -613,7 +613,7 @@ func Test_PostData1_segment_search(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 2, len(rdata))
@@ -665,7 +665,7 @@ func Test_PostData1_get_key_post(t *testing.T) {
 	resp = HttpGetKeys(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "getKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "getKeys")
 
 	rdata := SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 4, len(rdata))
@@ -686,7 +686,7 @@ func Test_PostData1_get_key_post(t *testing.T) {
 	resp = HttpGetKeys(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "getKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "getKeys")
 
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 2, len(rdata))
@@ -709,7 +709,7 @@ func Test_PostData1_get_key_post(t *testing.T) {
 	resp = HttpGetKeys(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "getKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "getKeys")
 
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 4, len(rdata))
@@ -740,7 +740,7 @@ func Test_PostData1_get_key_post(t *testing.T) {
 	resp = HttpGetKeys(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "getKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "getKeys")
 
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 4, len(rdata))
@@ -787,7 +787,7 @@ func Test_PostData_duplicate_test1(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata := SearchResponseEntryFromResponse(resp)
 
 	// Should only have the 4 records
@@ -828,7 +828,7 @@ func Test_PostData_duplicate_test2(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata := SearchResponseEntryFromResponse(resp)
 
 	// Should only have the 4 records
@@ -862,7 +862,7 @@ func Test_PostData1_segment_search_with_paths(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata := SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 2, len(rdata))
@@ -878,7 +878,7 @@ func Test_PostData1_segment_search_with_paths(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	rdata = SearchResponseEntryFromResponse(resp)
 	assert.Equal(t, 2, len(rdata))
@@ -889,7 +889,7 @@ func Test_PostData1_segment_search_with_paths(t *testing.T) {
 	resp = HttpGetKeyValue("b1", "games/g1:45", BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "getKey")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "getKey")
 
 	rstr := ResponseBodyAsString(resp)
 	assert.Equal(t, "{game1}", rstr)
@@ -922,7 +922,7 @@ func Test_PostData_update(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata := SearchResponseEntryFromResponse(resp)
 
 	// Should only have the 4 records
@@ -960,7 +960,7 @@ func Test_PostData_update_alias_autoupdate(t *testing.T) {
 	resp = HttpSearch(sk, BucketsInstance.authsecret.secret)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assertHeader(t, resp, RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 	rdata := SearchResponseEntryFromResponse(resp)
 
 	// Should only have the 4 records

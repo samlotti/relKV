@@ -5,10 +5,10 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
-	. "kvDb/common"
 	"log"
 	"net/http"
 	"os"
+	. "relKV/common"
 	"strconv"
 	"strings"
 )

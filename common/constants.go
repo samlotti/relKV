@@ -13,7 +13,7 @@ const (
 	HEADER_ALIAS_SEPARATOR      = ";"
 	HEADER_SEGMENT_KEY          = "segments"
 	HEADER_SEGMENT_SEPARATOR    = ":"
-	RESP_HEADER_KVDB_FUNCTION   = "func"
+	RESP_HEADER_RELDB_FUNCTION  = "func"
 	RESP_HEADER_DUPLICATE_ERROR = "duplicate_key"
 	RESP_HEADER_ERROR_MSG       = "error_msg"
 )

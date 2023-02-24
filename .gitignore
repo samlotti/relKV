@@ -25,4 +25,4 @@ test/data/
 test/databk/
 datadir/
 databackup/
-kvDb.log
+relKV.log

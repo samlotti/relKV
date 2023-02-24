@@ -1,4 +1,4 @@
-module kvDb
+module relKV
 
 go 1.18
 

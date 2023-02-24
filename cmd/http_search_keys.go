@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
-	. "kvDb/common"
 	"math"
 	"net/http"
+	. "relKV/common"
 )
 
 // searchKeys - returns keys in the bucket and optionally the contents
@@ -42,7 +42,7 @@ func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request
 	db = bdb
 
 	writer.Header().Set("content-type", "application/json")
-	writer.Header().Set(RESP_HEADER_KVDB_FUNCTION, "searchKeys")
+	writer.Header().Set(RESP_HEADER_RELDB_FUNCTION, "searchKeys")
 
 	if !explain {
 		writer.Write([]byte("[\n"))

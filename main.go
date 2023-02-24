@@ -1,8 +1,8 @@
 package main
 
 import (
-	"kvDb/backup"
-	"kvDb/cmd"
+	"relKV/backup"
+	"relKV/cmd"
 )
 
 const Version = "0.1.0"

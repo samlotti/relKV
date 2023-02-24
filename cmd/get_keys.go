@@ -7,8 +7,8 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
 	"io"
-	. "kvDb/common"
 	"net/http"
+	. "relKV/common"
 	"strings"
 )
 
@@ -30,7 +30,7 @@ func (b *BucketsDb) getKeys(writer http.ResponseWriter, request *http.Request) {
 	request.Body = http.MaxBytesReader(writer, request.Body, b.baseTableSize)
 
 	writer.Header().Set("content-type", "application/json")
-	writer.Header().Set(RESP_HEADER_KVDB_FUNCTION, "getKeys")
+	writer.Header().Set(RESP_HEADER_RELDB_FUNCTION, "getKeys")
 	writer.Write([]byte("[\n"))
 
 	err = db.View(func(txn *badger.Txn) error {

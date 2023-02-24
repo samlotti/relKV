@@ -18,7 +18,7 @@ type BucketName string
 var BucketsInstance *BucketsDb
 
 func BootServer(version string, readyChannel chan *BucketsDb) {
-	log.Printf("Starting kvDb %s\n", version)
+	log.Printf("Starting relKV %s\n", version)
 	EnvInit()
 
 	logFile := EnvironmentInstance.GetEnv("LOG_FILE", "")

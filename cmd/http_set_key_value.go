@@ -5,8 +5,8 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
 	"io"
-	. "kvDb/common"
 	"net/http"
+	. "relKV/common"
 	"strings"
 	"sync/atomic"
 )
