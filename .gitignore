@@ -26,3 +26,4 @@ test/databk/
 datadir/
 databackup/
 relKV.log
+relKv_linux
