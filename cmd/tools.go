@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	. "relKV/common"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -213,4 +214,17 @@ func isAlias(item *badger.Item) bool {
 func SendError(writer http.ResponseWriter, message string, status int) {
 	writer.Header().Set(RESP_HEADER_ERROR_MSG, message)
 	http.Error(writer, message, status)
+}
+
+// sortBucketKeys - could have make totally generic but
+// don't have the golang.org/x/exp  package
+func sortBucketKeys[V any](theMap map[BucketName]V) []BucketName {
+	var ks []BucketName
+	for k, _ := range theMap {
+		ks = append(ks, k)
+	}
+	sort.Slice(ks, func(i, j int) bool {
+		return ks[i] < ks[j]
+	})
+	return ks
 }

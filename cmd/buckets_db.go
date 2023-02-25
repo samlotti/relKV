@@ -37,6 +37,7 @@ type BucketsDb struct {
 	authsecret     *AuthSecret
 	logfile        string
 	logger         *BadgerLogger
+	version        string
 }
 
 func (b *BucketsDb) shutDownServer() {

@@ -44,6 +44,7 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 	}
 
 	BucketsInstance = &BucketsDb{
+		version:        version,
 		logfile:        logFile,
 		listenAddrPort: listen,
 		ServerState:    Starting,

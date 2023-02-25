@@ -65,6 +65,7 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 	hasErrors := false
 	w := bytes.Buffer{}
 	w.Write([]byte("<html><body style='background: darkgray'><pre>"))
+	w.Write([]byte(fmt.Sprintf("relKv %s\n", BucketsInstance.version)))
 	w.Write([]byte(fmt.Sprintf("Start: %s\n", StatsInstance.serverStart.Format(time.RFC822))))
 	dur := time.Now().Sub(StatsInstance.serverStart)
 	w.Write([]byte(fmt.Sprintf("Uptime: %s\n", dur.String())))
@@ -77,7 +78,10 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 		w.Write([]byte(fmt.Sprintf("backupsInstance - Running at hours: %s\n\n", EnvironmentInstance.GetEnv("BK_HOURS", "?"))))
 
 		w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %s\n", "name", "status", "duration", "lastRun", "last message")))
-		for bucket, bstat := range StatsInstance.Backups {
+		keys := sortBucketKeys(StatsInstance.bucketStats)
+		for _, bucket := range keys {
+			bstat := StatsInstance.Backups[bucket]
+
 			dur := time.Now().Sub(bstat.LastStart)
 			if dur > 24*time.Hour {
 				hasErrors = true
@@ -97,14 +101,16 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 
 	w.Write([]byte("\n\nWrites\n"))
 	w.Write([]byte(fmt.Sprintf("%-20s %15s  %15s  %15s  %15s   %s\n", "name", "#Delete", "#Write", "#WriteErr", "Current Errors", "last error message")))
-	for bucket, bstat := range StatsInstance.bucketStats {
 
+	keys := sortBucketKeys(StatsInstance.bucketStats)
+	for _, key := range keys {
+		bstat := StatsInstance.bucketStats[key]
 		numDelete := atomic.LoadInt64(&bstat.numDelete)
 		numError := atomic.LoadInt64(&bstat.numError)
 		seqWriteError := atomic.LoadInt64(&bstat.seqWriteError)
 		numWrites := atomic.LoadInt64(&bstat.numWrites)
 
-		w.Write([]byte(fmt.Sprintf("%-20s %15d  %15d  %15d  %15d   %s\n", bucket, numDelete, numWrites, numError, seqWriteError, bstat.lastEMessage)))
+		w.Write([]byte(fmt.Sprintf("%-20s %15d  %15d  %15d  %15d   %s\n", key, numDelete, numWrites, numError, seqWriteError, bstat.lastEMessage)))
 		if seqWriteError > 10 {
 			hasErrors = true
 		}
