@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -29,8 +30,9 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 	}
 
 	// Make sure port is available
+
 	if !CheckPortAvail(listen) {
-		panic(fmt.Sprintf("port in use: %s", listen))
+		log.Fatal(fmt.Sprintf("port in use: %s", listen))
 	}
 
 	if len(logFile) > 0 {
@@ -42,6 +44,8 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 
 		log.SetOutput(f)
 	}
+
+	go ProcessUnixCommands()
 
 	BucketsInstance = &BucketsDb{
 		version:        version,
@@ -99,6 +103,51 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 		log.Println(err)
 	}
 
+}
+
+func ProcessUnixCommands() {
+	unixSocket := EnvironmentInstance.GetEnv("CMD_UNIX_SOCKET", "")
+	if len(unixSocket) == 0 {
+		log.Println("No socket support, CMD_UNIX_SOCKET not specified")
+		return
+	}
+
+	_, err := os.Stat(unixSocket)
+	if err == nil || !errors.Is(err, os.ErrNotExist) {
+		// log.Fatal("sock file exists: ", unixSocket)
+		os.Remove(unixSocket)
+	}
+
+	l, err := net.Listen("unix", unixSocket)
+	if err != nil {
+		log.Fatal("cannot open:", unixSocket, " err: ", err)
+	}
+
+	for {
+		fd, err := l.Accept()
+		if err != nil {
+			log.Println("accept error on unix socket:", err)
+			continue
+		}
+		go handleCommands(fd)
+	}
+}
+
+func handleCommands(fd net.Conn) {
+	fmt.Println("unix client connected")
+	buf := make([]byte, 1024)
+	n, err := fd.Read(buf[:])
+	if err != nil {
+		return
+	}
+	cmd := string(buf[:n])
+	if cmd == "stop\n" {
+		fmt.Println("Stop called")
+		BucketsInstance.shutDownServer()
+		fd.Write([]byte("stopped\n"))
+	}
+
+	fd.Close()
 }
 
 // CheckPortAvail if a port is available
