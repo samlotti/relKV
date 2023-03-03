@@ -54,6 +54,8 @@ POST /get/{bucket}  ? b64
 ============================================================================================================
 Segments are parts of keys separated by :
  This allows keys to be searched with a filtering on parts of the keys.
+ Note that designing keys and alternates to be filtered in sort order provides a very efficient means to access
+ rows in the kv store.
 
 ============================================================================================================
 Aliases allow an alternate index to be created.  These become keys added like other keys but point to the original
