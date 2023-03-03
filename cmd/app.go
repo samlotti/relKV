@@ -94,10 +94,8 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 		BucketsInstance.ServerState = Stopped
 	}()
 
-	log.Println("sending ready")
 	BucketsInstance.ServerState = Running
 	readyChannel <- BucketsInstance
-	log.Println("sent ready")
 
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Println(err)
