@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"relKV/common"
 )
 
 func (b *BucketsDb) createBucket(writer http.ResponseWriter, request *http.Request) {
@@ -18,14 +19,14 @@ func (b *BucketsDb) createBucket(writer http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	if b.DbBucket[BucketName(bucket)] != nil {
+	if b.DbBucket[common.BucketName(bucket)] != nil {
 		writer.WriteHeader(http.StatusCreated)
 		return
 	}
 
-	err := b.Open(BucketName(bucket))
+	err := b.Open(common.BucketName(bucket))
 	if err == nil {
-		b.addBucket(BucketName(bucket))
+		b.addBucket(common.BucketName(bucket))
 		writer.WriteHeader(http.StatusCreated)
 	} else {
 		log.Println(fmt.Sprintf("error creating bucket:%s, %s", bucket, err))

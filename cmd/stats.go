@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"relKV/common"
 	"sync/atomic"
 	"time"
 )
@@ -25,25 +26,23 @@ type BucketStats struct {
 
 type Stats struct {
 	serverStart time.Time
-	Backups     map[BucketName]*BackupData
-	bucketStats map[BucketName]*BucketStats
+	Backups     map[common.BucketName]*BackupData
+	bucketStats map[common.BucketName]*BucketStats
 }
 
 var StatsInstance = &Stats{}
 
 func (s *Stats) init() {
 	s.serverStart = time.Now()
-	s.Backups = make(map[BucketName]*BackupData)
-	s.bucketStats = make(map[BucketName]*BucketStats)
+	s.Backups = make(map[common.BucketName]*BackupData)
+	s.bucketStats = make(map[common.BucketName]*BucketStats)
 
 	for _, bucket := range BucketsInstance.buckets {
-
 		s.addBucket(bucket)
-
 	}
 }
 
-func (s *Stats) addBucket(bucket BucketName) {
+func (s *Stats) addBucket(bucket common.BucketName) {
 
 	s.Backups[bucket] = &BackupData{
 		Status:      "",
@@ -70,7 +69,7 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 	dur := time.Now().Sub(StatsInstance.serverStart)
 	w.Write([]byte(fmt.Sprintf("Uptime: %s\n", dur.String())))
 	w.Write([]byte(fmt.Sprintf("Current time: %s\n\n", time.Now().Format(time.RFC822))))
-
+	w.Write([]byte("===================================\n\n"))
 	if EnvironmentInstance.GetBoolEnv("NOBACKUP") {
 		w.Write([]byte("backupsInstance\n"))
 		w.Write([]byte(fmt.Sprintf("** backupsInstance are not enabled\n")))
@@ -88,6 +87,9 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 				w.Write([]byte(fmt.Sprintf("%-25s: error: backup has not been run\n", bucket)))
 			}
 			dur = bstat.LastEnd.Sub(bstat.LastStart)
+			if bstat.Status == "running" {
+				dur = time.Now().Sub(bstat.LastStart)
+			}
 			smsg := bstat.Status
 			if bstat.LastStart == StatsInstance.serverStart {
 				smsg = "Not run"
@@ -97,9 +99,69 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 				hasErrors = true
 			}
 		}
-	}
+		//
+		//w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %s\n", "name", "status", "duration", "lastRun", "last message")))
+		//keys = sortBucketKeys(StatsInstance.bucketStats)
+		//for _, bucket := range keys {
+		//	bstat := StatsInstance.Scps[bucket]
+		//
+		//	dur := time.Now().Sub(bstat.LastStart)
+		//	if dur > 24*time.Hour {
+		//		hasErrors = true
+		//		w.Write([]byte(fmt.Sprintf("%-25s: error: backup has not been run\n", bucket)))
+		//	}
+		//	dur = bstat.LastEnd.Sub(bstat.LastStart)
+		//	smsg := bstat.Status
+		//	if bstat.LastStart == StatsInstance.serverStart {
+		//		smsg = "Not run"
+		//	}
+		//	w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %s\n", bucket, smsg, dur.String(), bstat.LastStart.Format(time.RFC822), bstat.LastMessage)))
+		//	if len(bstat.LastMessage) > 0 {
+		//		hasErrors = true
+		//	}
+		//}
 
-	w.Write([]byte("\n\nWrites\n"))
+		if len(b.Jobs) > 0 {
+			w.Write([]byte("\n\n===================================\n"))
+			w.Write([]byte("Scp jobs to remote\n"))
+			// if common.ScpEnvInstance.IsEnabled() {
+			w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %-25s %s\n", "bucket", "status", "duration", "next Send", "last Send", "message")))
+			for _, job := range b.Jobs {
+				dur = job.LastEnd.Sub(job.LastStart)
+				nextSend := job.NextSend.Format(time.RFC822)
+				lastSend := job.LastStart.Format(time.RFC822)
+				smsg := ""
+				switch job.Status {
+				case common.ScpError:
+					smsg = "Error"
+				case common.ScpRunning:
+					smsg = "Running"
+					dur = time.Now().Sub(job.LastStart)
+					lastSend = "running"
+				case common.ScpPending:
+					smsg = "Pending"
+				case common.ScpComplete:
+					smsg = "Completed"
+					nextSend = ""
+				}
+
+				w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %-25s %s\n", job.BucketName, smsg, dur.String(), nextSend, lastSend, job.Message)))
+				if len(job.Message) > 0 {
+					hasErrors = true
+				}
+
+				if time.Now().Sub(job.LastStart) > 24*time.Hour {
+					hasErrors = true
+					w.Write([]byte(fmt.Sprintf("%-25s: error: backup has not been run\n", job.BucketName)))
+				}
+
+			}
+		}
+
+	}
+	w.Write([]byte("\n\n===================================\n"))
+
+	w.Write([]byte("\nWrites\n"))
 	w.Write([]byte(fmt.Sprintf("%-20s %15s  %15s  %15s  %15s   %s\n", "name", "#Delete", "#Write", "#WriteErr", "Current Errors", "last error message")))
 
 	keys := sortBucketKeys(StatsInstance.bucketStats)

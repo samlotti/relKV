@@ -9,12 +9,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"relKV/common"
 	"strings"
 	"syscall"
 	"time"
 )
-
-type BucketName string
 
 var BucketsInstance *BucketsDb
 
@@ -56,6 +55,7 @@ func BootServer(version string, readyChannel chan *BucketsDb) {
 		dbPath:         EnvironmentInstance.GetEnv("DB_PATH", ""),
 		buckets:        EnvironmentInstance.GetBucketArray("BUCKETS"),
 		allowCreate:    EnvironmentInstance.GetBoolEnv("ALLOW_CREATE_DB"),
+		Jobs:           make([]*common.ScpJob, 0),
 	}
 
 	BucketsInstance.Init()

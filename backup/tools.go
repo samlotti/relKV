@@ -2,11 +2,11 @@ package backup
 
 import (
 	"fmt"
-	"relKV/cmd"
+	"relKV/common"
 	"time"
 )
 
-func CreateBackupFilename(name cmd.BucketName, addDay bool, addHour bool) string {
+func CreateBackupFilename(name common.BucketName, addDay bool, addHour bool) string {
 	n := string(name)
 	if addDay {
 		n = fmt.Sprintf("%s_%02d", n, time.Now().Day())

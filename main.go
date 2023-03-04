@@ -8,7 +8,7 @@ import (
 	"relKV/commands"
 )
 
-const Version = "0.1.0"
+const Version = "0.3.0"
 
 const Banner = `
 ██████╗ ███████╗██╗     ██╗  ██╗██╗   ██╗
@@ -31,6 +31,8 @@ func main() {
 	readyChannel := make(chan *cmd.BucketsDb)
 	go cmd.BootServer(Version, readyChannel)
 	bk := <-readyChannel
+
+	backup.ScpInit(cmd.BucketsInstance)
 
 	if !cmd.EnvironmentInstance.GetBoolEnv("NOBACKUP") {
 		backup.BackupsInit(cmd.BucketsInstance)

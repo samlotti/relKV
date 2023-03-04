@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"relKV/common"
 	"strings"
 	"syscall"
 	"time"
@@ -27,17 +28,19 @@ const Stopped ServerState = 2
 
 type BucketsDb struct {
 	listenAddrPort string
-	DbBucket       map[BucketName]*badger.DB
+	DbBucket       map[common.BucketName]*badger.DB
 	dbPath         string
 	allowCreate    bool
 	baseTableSize  int64
-	buckets        []BucketName
+	buckets        []common.BucketName
 	ServerState    ServerState
 	stopChan       chan os.Signal
 	authsecret     *AuthSecret
 	logfile        string
 	logger         *BadgerLogger
 	version        string
+
+	Jobs []*common.ScpJob
 }
 
 func (b *BucketsDb) shutDownServer() {
@@ -89,13 +92,13 @@ func (b *BucketsDb) openDBBuckets() {
 	}
 	for _, entry := range dirs {
 		if entry.IsDir() {
-			b.addBucket(BucketName(entry.Name()))
+			b.addBucket(common.BucketName(entry.Name()))
 		}
 	}
 
-	b.DbBucket = make(map[BucketName]*badger.DB)
+	b.DbBucket = make(map[common.BucketName]*badger.DB)
 	for _, bname := range b.buckets {
-		err := b.Open(BucketName(bname))
+		err := b.Open(common.BucketName(bname))
 		if err != nil {
 			fmt.Printf("error opening bucket:%s", err)
 			panic(err)
@@ -103,7 +106,7 @@ func (b *BucketsDb) openDBBuckets() {
 	}
 }
 
-func (b *BucketsDb) Open(name BucketName) error {
+func (b *BucketsDb) Open(name common.BucketName) error {
 	dbPath := filepath.Join(b.dbPath, string(name))
 	dbOpts := badger.DefaultOptions(dbPath)
 	dbOpts = dbOpts.WithLogger(b.logger)
@@ -123,7 +126,7 @@ func (b *BucketsDb) Open(name BucketName) error {
 }
 
 func (b *BucketsDb) getDB(bucket string) (*badger.DB, error) {
-	if db, ok := b.DbBucket[BucketName(bucket)]; ok {
+	if db, ok := b.DbBucket[common.BucketName(bucket)]; ok {
 		return db, nil
 	}
 	return nil, errors.New("bucket not found")
@@ -181,7 +184,7 @@ func (b *BucketsDb) WaitTillStarted() {
 	}
 }
 
-func (b *BucketsDb) addBucket(name BucketName) {
+func (b *BucketsDb) addBucket(name common.BucketName) {
 	if !validateBucketName(string(name)) {
 		panic(fmt.Sprintf("bad bucket name %s", name))
 	}
@@ -190,6 +193,6 @@ func (b *BucketsDb) addBucket(name BucketName) {
 			return
 		}
 	}
-	b.buckets = append(b.buckets, BucketName(name))
+	b.buckets = append(b.buckets, common.BucketName(name))
 	StatsInstance.addBucket(name)
 }
