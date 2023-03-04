@@ -27,4 +27,4 @@ datadir/
 databackup/
 relKV.log
 relKv_linux
-relKv_linux
+relKv_mac
