@@ -4,19 +4,23 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/dgraph-io/badger/v3"
-	"github.com/gorilla/mux"
 	"math"
 	"net/http"
 	. "relKV/common"
+
+	"github.com/dgraph-io/badger/v3"
+	"github.com/gorilla/mux"
 )
 
 // searchKeys - returns keys in the bucket and optionally the contents
 // parameters supported:
 //   skip, max <- paging support
-//   rel <- relationships in filename portion
+//   segments <- :segments: in keyportion
 //   prefix <- limit to prefixes
 //   values <- t/f  default is false
+//   b64 <- return values as base64
+//   explain <- dont return data, return headers showing how many rows were read for the request.
+
 func (b *BucketsDb) searchKeys(writer http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	bucket := vars["bucket"]
