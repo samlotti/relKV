@@ -191,7 +191,7 @@ func (s *ScpEnv) sendScp(j *common.ScpJob) {
 
 	transferOptions := &scp.FileTransferOption{
 		Context:      context.Background(),
-		Timeout:      30 * time.Second,
+		Timeout:      0,
 		PreserveProp: true,
 	}
 	destFile := path.Join(ScpEnvInstance.scpDir, scpDestName)
