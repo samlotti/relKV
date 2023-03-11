@@ -114,7 +114,7 @@ func (b *BucketsDb) Open(name common.BucketName) error {
 	dbOpts = dbOpts.WithIndexCacheSize(128 << 20)   // 128MB
 	dbOpts = dbOpts.WithBaseTableSize(b.baseTableSize)
 	dbOpts = dbOpts.WithCompactL0OnClose(true)
-	dbOpts = dbOpts.WithBlockCacheSize(0)
+	dbOpts = dbOpts.WithBlockCacheSize(256 << 21)
 
 	db, err := badger.Open(dbOpts)
 	if err != nil {
