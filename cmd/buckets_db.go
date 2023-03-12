@@ -116,6 +116,9 @@ func (b *BucketsDb) Open(name common.BucketName) error {
 	dbOpts = dbOpts.WithCompactL0OnClose(true)
 	dbOpts = dbOpts.WithBlockCacheSize(256 << 21)
 
+	// Reduce size of bloom filter 25% false positive
+	dbOpts = dbOpts.WithBloomFalsePositive(0.25)
+
 	db, err := badger.Open(dbOpts)
 	if err != nil {
 		return err
