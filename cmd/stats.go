@@ -21,6 +21,7 @@ type BucketStats struct {
 	seqWriteError int64 // How many in a row, resets on an ok write
 	numWrites     int64
 	numDelete     int64
+	numGC         int64
 	lastEMessage  string // the last error message
 }
 
@@ -181,6 +182,17 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 	w.Write([]byte(fmt.Sprintf("\n")))
 	if hasErrors {
 		w.Write([]byte(fmt.Sprintf("there were some errors listed above\n")))
+	}
+
+	w.Write([]byte("\nGarbage Collection Cycles\n"))
+	w.Write([]byte(fmt.Sprintf("%-20s %15s\n", "name", "#Cycles")))
+
+	keys = sortBucketKeys(StatsInstance.bucketStats)
+	for _, key := range keys {
+		bstat := StatsInstance.bucketStats[key]
+		numCycles := atomic.LoadInt64(&bstat.numGC)
+
+		w.Write([]byte(fmt.Sprintf("%-20s %15d\n", key, numCycles)))
 	}
 
 	w.Write([]byte("</pre></body></html>"))

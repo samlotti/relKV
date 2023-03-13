@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"relKV/common"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 )
@@ -149,11 +150,13 @@ func (b *BucketsDb) runGC() {
 			return
 		}
 		for name, db := range b.DbBucket {
-			if err := db.RunValueLogGC(0.7); err != nil {
+			if err := db.RunValueLogGC(0.5); err != nil {
 				if err != badger.ErrNoRewrite {
 					log.Printf("error running gc on:%s", name)
 					log.Fatal(err)
 				}
+			} else {
+				atomic.AddInt64(&StatsInstance.bucketStats[common.BucketName(name)].numGC, 1)
 			}
 		}
 	}
