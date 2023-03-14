@@ -149,11 +149,17 @@ func (b *BucketsDb) runGC() {
 		if b.ServerState == Stopped {
 			return
 		}
-		for name, db := range b.DbBucket {
+
+		//b.logger.Warningf("Running gc loop")
+
+		for name, db := range BucketsInstance.DbBucket {
+			//b.logger.Warningf("Name: %s", name)
 			if err := db.RunValueLogGC(0.5); err != nil {
 				if err != badger.ErrNoRewrite {
 					log.Printf("error running gc on:%s", name)
 					log.Fatal(err)
+				} else {
+					atomic.AddInt64(&StatsInstance.bucketStats[common.BucketName(name)].numGCNR, 1)
 				}
 			} else {
 				atomic.AddInt64(&StatsInstance.bucketStats[common.BucketName(name)].numGC, 1)
