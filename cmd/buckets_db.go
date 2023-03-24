@@ -111,14 +111,14 @@ func (b *BucketsDb) Open(name common.BucketName) error {
 	dbPath := filepath.Join(b.dbPath, string(name))
 	dbOpts := badger.DefaultOptions(dbPath)
 	dbOpts = dbOpts.WithLogger(b.logger)
-	dbOpts = dbOpts.WithValueLogFileSize(128 << 20) // 128MB
-	dbOpts = dbOpts.WithIndexCacheSize(128 << 20)   // 128MB
-	dbOpts = dbOpts.WithBaseTableSize(b.baseTableSize)
+	// dbOpts = dbOpts.WithValueLogFileSize(128 << 20) // 128MB
+	// dbOpts = dbOpts.WithIndexCacheSize(128 << 20)   // 128MB
+	// dbOpts = dbOpts.WithBaseTableSize(b.baseTableSize)
 	dbOpts = dbOpts.WithCompactL0OnClose(true)
 	dbOpts = dbOpts.WithBlockCacheSize(256 << 21)
 
-	// Reduce size of bloom filter 25% false positive
-	dbOpts = dbOpts.WithBloomFalsePositive(0.25)
+	// Reduce size of bloom filter % false positives
+	dbOpts = dbOpts.WithBloomFalsePositive(0)
 
 	db, err := badger.Open(dbOpts)
 	if err != nil {

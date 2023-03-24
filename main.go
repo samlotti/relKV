@@ -8,7 +8,7 @@ import (
 	"relKV/commands"
 )
 
-const Version = "0.3.7"
+const Version = "0.3.8"
 
 const Banner = `
 ██████╗ ███████╗██╗     ██╗  ██╗██╗   ██╗
