@@ -103,7 +103,13 @@ func (b *Backups) createBackup(name common.BucketName, db *badger.DB) {
 		w = wb
 	}
 
-	_, err = db.Backup(w, 0)
+	// _, err = db.Backup(w, 0)
+
+	stream := db.NewStream()
+	stream.LogPrefix = fmt.Sprintf("backup.stream: %s", name)
+	stream.NumGo = 2 // Default is 16 -- reduce memory usage
+	_, err = stream.Backup(w, 0)
+
 	StatsInstance.Backups[name].LastEnd = time.Now()
 	if err != nil {
 		StatsInstance.Backups[name].Status = "failed"
