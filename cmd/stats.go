@@ -197,6 +197,11 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%-20s %15d %15d\n", key, numCycles, NRnumCycles)))
 	}
 
+	w.Write([]byte("\nMemory related\n"))
+	w.Write([]byte(fmt.Sprintf("BK_NUM_GO=%d  lower = less memory during backup\n", EnvironmentInstance.GetBackupGoRoutineNumber())))
+	w.Write([]byte(fmt.Sprintf("BLOOM_FALSE_PERCENTAGE=%f  0=off, less memory as approach to 0.99\n", EnvironmentInstance.GetBloomFalsePercentage())))
+	w.Write([]byte(fmt.Sprintf("BK_ZIP=%t  true will zip but consumes huge memory :(\n", EnvironmentInstance.GetBoolEnv("BK_ZIP"))))
+
 	w.Write([]byte("</pre></body></html>"))
 	if !hasErrors {
 		writer.WriteHeader(http.StatusOK)

@@ -84,6 +84,41 @@ func (e *Environment) GetBucketArray(key string) []BucketName {
 
 }
 
+func (e *Environment) GetFloat(key string, dflt float64) float64 {
+	sval := e.GetEnv(key, "")
+	if len(sval) == 0 {
+		return dflt
+	}
+
+	ival, err := strconv.ParseFloat(strings.TrimSpace(sval), 64)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("invalid integer for %s found %s", key, sval))
+	}
+	return ival
+
+}
+
+func (e *Environment) GetBloomFalsePercentage() float64 {
+	return EnvironmentInstance.GetFloat("BLOOM_FALSE_PERCENTAGE", 0.01)
+}
+func (e *Environment) GetBackupGoRoutineNumber() int {
+	return EnvironmentInstance.GetInt("BK_NUM_GO", 2)
+}
+
+func (e *Environment) GetInt(key string, dflt int) int {
+	sval := e.GetEnv(key, "")
+	if len(sval) == 0 {
+		return dflt
+	}
+
+	ival, err := strconv.Atoi(strings.TrimSpace(sval))
+	if err != nil {
+		log.Fatal(fmt.Sprintf("invalid integer for %s found %s", key, sval))
+	}
+	return ival
+
+}
+
 func (e *Environment) GetIntArray(key string) []int {
 	val := e.GetEnv(key, "")
 	if len(val) == 0 {

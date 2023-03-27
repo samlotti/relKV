@@ -62,6 +62,8 @@ func (b *Backups) Run() {
 
 func (b *Backups) createBackup(name common.BucketName, db *badger.DB) {
 
+	bkgonum := EnvironmentInstance.GetBackupGoRoutineNumber()
+
 	suffixDay := EnvironmentInstance.GetBoolEnv("BK_SUFFIX_DAY")
 	suffixHour := EnvironmentInstance.GetBoolEnv("BK_SUFFIX_HOUR")
 	bkZip := EnvironmentInstance.GetBoolEnv("BK_ZIP")
@@ -107,7 +109,7 @@ func (b *Backups) createBackup(name common.BucketName, db *badger.DB) {
 
 	stream := db.NewStream()
 	stream.LogPrefix = fmt.Sprintf("backup.stream: %s", name)
-	stream.NumGo = 2 // Default is 16 -- reduce memory usage
+	stream.NumGo = bkgonum // Default is 16 -- reduce memory usage
 	_, err = stream.Backup(w, 0)
 
 	StatsInstance.Backups[name].LastEnd = time.Now()
