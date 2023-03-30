@@ -142,6 +142,8 @@ func (b *Backups) runBk() {
 		}
 	}()
 
+	StatsInstance.LastBKRunLoop = time.Now()
+
 	runBk := false
 	if time.Now().Hour() != b.lastBkHr {
 		for _, h := range b.hourList {
@@ -153,6 +155,7 @@ func (b *Backups) runBk() {
 	}
 	if runBk {
 		b.lastBkHr = time.Now().Hour()
+		StatsInstance.LastBKStart = time.Now()
 
 		for name, db := range BucketsInstance.DbBucket {
 			b.createBackup(name, db)

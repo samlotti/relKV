@@ -27,9 +27,11 @@ type BucketStats struct {
 }
 
 type Stats struct {
-	serverStart time.Time
-	Backups     map[common.BucketName]*BackupData
-	bucketStats map[common.BucketName]*BucketStats
+	serverStart   time.Time
+	Backups       map[common.BucketName]*BackupData
+	bucketStats   map[common.BucketName]*BucketStats
+	LastBKRunLoop time.Time
+	LastBKStart   time.Time
 }
 
 var StatsInstance = &Stats{}
@@ -76,7 +78,9 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 		w.Write([]byte("backupsInstance\n"))
 		w.Write([]byte(fmt.Sprintf("** backupsInstance are not enabled\n")))
 	} else {
-		w.Write([]byte(fmt.Sprintf("backupsInstance - Running at hours: %s\n\n", EnvironmentInstance.GetEnv("BK_HOURS", "?"))))
+		w.Write([]byte(fmt.Sprintf("backupsInstance - Running at hours: %s\n", EnvironmentInstance.GetEnv("BK_HOURS", "?"))))
+		w.Write([]byte(fmt.Sprintf("last check loop -  %s\n", StatsInstance.LastBKRunLoop.Format(time.RFC822))))
+		w.Write([]byte(fmt.Sprintf("last start      -  %s\n\n", StatsInstance.LastBKStart.Format(time.RFC822))))
 
 		w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %s\n", "name", "status", "duration", "lastRun", "last message")))
 		keys := sortBucketKeys(StatsInstance.bucketStats)
