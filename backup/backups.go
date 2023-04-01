@@ -17,10 +17,11 @@ import (
 )
 
 type Backups struct {
-	bkfolder string
-	lastBkHr int
-	hourList []int
-	buckets  *BucketsDb
+	bkfolder  string
+	lastBkHr  int
+	lastBkDay int
+	hourList  []int
+	buckets   *BucketsDb
 }
 
 var BackupsInstance *Backups
@@ -145,9 +146,12 @@ func (b *Backups) runBk() {
 	StatsInstance.LastBKRunLoop = time.Now()
 
 	runBk := false
-	if time.Now().Hour() != b.lastBkHr {
+
+	//bug: if one hour in list it will only run once.
+	// need to add day
+	if time.Now().Hour() != b.lastBkHr || time.Now().Day() != b.lastBkDay {
 		for _, h := range b.hourList {
-			if h == time.Now().Hour() {
+			if h == time.Now().Hour() && time.Now().Day() != b.lastBkDay {
 				runBk = true
 				break
 			}
@@ -155,6 +159,7 @@ func (b *Backups) runBk() {
 	}
 	if runBk {
 		b.lastBkHr = time.Now().Hour()
+		b.lastBkDay = time.Now().Day()
 		StatsInstance.LastBKStart = time.Now()
 
 		for name, db := range BucketsInstance.DbBucket {
