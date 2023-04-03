@@ -74,11 +74,16 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Uptime: %s\n", dur.String())))
 	w.Write([]byte(fmt.Sprintf("Current time: %s\n\n", time.Now().Format(time.RFC822))))
 	w.Write([]byte("===================================\n\n"))
+
+	var hourGrace = time.Duration(EnvironmentInstance.GetBackupGraceHours()) * time.Hour
+
 	if EnvironmentInstance.GetBoolEnv("NOBACKUP") {
 		w.Write([]byte("backupsInstance\n"))
 		w.Write([]byte(fmt.Sprintf("** backupsInstance are not enabled\n")))
 	} else {
 		w.Write([]byte(fmt.Sprintf("backupsInstance - Running at hours: %s\n", EnvironmentInstance.GetEnv("BK_HOURS", "?"))))
+		w.Write([]byte(fmt.Sprintf("Age for backup before its considered failed: %s\n", hourGrace)))
+
 		w.Write([]byte(fmt.Sprintf("last check loop -  %s\n", StatsInstance.LastBKRunLoop.Format(time.RFC822))))
 		w.Write([]byte(fmt.Sprintf("last start      -  %s\n\n", StatsInstance.LastBKStart.Format(time.RFC822))))
 
@@ -156,7 +161,7 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 					hasErrors = true
 				}
 
-				if time.Now().Sub(job.LastStart) > 24*time.Hour {
+				if time.Now().Sub(job.LastStart) > hourGrace {
 					hasErrors = true
 					w.Write([]byte(fmt.Sprintf("%-25s: error: backup has not been run\n", job.BucketName)))
 				}

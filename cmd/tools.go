@@ -98,6 +98,10 @@ func (e *Environment) GetFloat(key string, dflt float64) float64 {
 
 }
 
+func (e *Environment) GetBackupGraceHours() int {
+	return EnvironmentInstance.GetInt("BACKUP_GRACE_HOURS", 26)
+}
+
 func (e *Environment) GetBloomFalsePercentage() float64 {
 	return EnvironmentInstance.GetFloat("BLOOM_FALSE_PERCENTAGE", 0.01)
 }
