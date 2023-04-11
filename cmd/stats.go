@@ -93,7 +93,7 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 			bstat := StatsInstance.Backups[bucket]
 
 			dur := time.Now().Sub(bstat.LastStart)
-			if dur > 24*time.Hour {
+			if dur > hourGrace {
 				hasErrors = true
 				w.Write([]byte(fmt.Sprintf("%-25s: error: backup has not been run\n", bucket)))
 			}
