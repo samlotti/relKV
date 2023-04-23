@@ -4,12 +4,12 @@ import (
 	"archive/zip"
 	"fmt"
 	"github.com/dgraph-io/badger/v3"
+	"github.com/samlotti/relKV/cmd"
 	"io"
 	"log"
 	"math"
 	"os"
 	"path/filepath"
-	"relKV/cmd"
 	"strings"
 )
 

@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	. "github.com/samlotti/relKV/common"
 	"math"
 	"net/http"
-	. "relKV/common"
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"

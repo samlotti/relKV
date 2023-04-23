@@ -2,9 +2,9 @@ package commands
 
 import (
 	"fmt"
+	"github.com/samlotti/relKV/cmd"
 	"log"
 	"net"
-	"relKV/cmd"
 )
 
 func ProcessCommands(cmds []string) {
@@ -56,5 +56,5 @@ func handleStop() {
 	if err != nil {
 		log.Fatal("server disconnected")
 	}
-	log.Printf("Server response:", string(buf[0:n]))
+	log.Printf("Server response: %s", string(buf[0:n]))
 }

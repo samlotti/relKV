@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/samlotti/relKV/common"
 	"log"
 	"net/http"
-	"relKV/common"
 )
 
 func (b *BucketsDb) createBucket(writer http.ResponseWriter, request *http.Request) {

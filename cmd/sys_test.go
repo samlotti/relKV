@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	. "github.com/samlotti/relKV/common"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"os"
-	. "relKV/common"
 	"strings"
 	"testing"
 )

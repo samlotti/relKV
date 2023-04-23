@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/samlotti/relKV/backup"
+	"github.com/samlotti/relKV/cmd"
+	"github.com/samlotti/relKV/commands"
 	"os"
-	"relKV/backup"
-	"relKV/cmd"
-	"relKV/commands"
 )
 
-const Version = "0.3.15"
+const Version = "0.3.16"
 
 const Banner = `
 ██████╗ ███████╗██╗     ██╗  ██╗██╗   ██╗
@@ -17,8 +17,7 @@ const Banner = `
 ██╔══██╗██╔══╝  ██║     ██╔═██╗ ╚██╗ ██╔╝
 ██║  ██║███████╗███████╗██║  ██╗ ╚████╔╝ 
 ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  
-./relKv help      - for help                                  
-`
+./relKv help      - for help`
 
 func main() {
 

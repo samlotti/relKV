@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"encoding/json"
+	. "github.com/samlotti/relKV/common"
 	"net/http"
-	. "relKV/common"
 )
 
 func (b *BucketsDb) listBuckets(writer http.ResponseWriter, request *http.Request) {

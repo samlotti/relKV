@@ -3,8 +3,8 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+	"github.com/samlotti/relKV/common"
 	"net/http"
-	"relKV/common"
 	"sync/atomic"
 	"time"
 )

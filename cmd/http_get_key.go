@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
+	"github.com/samlotti/relKV/common"
 	"net/http"
-	"relKV/common"
 )
 
 func (b *BucketsDb) getKey(writer http.ResponseWriter, request *http.Request) {

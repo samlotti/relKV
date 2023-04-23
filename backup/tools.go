@@ -2,7 +2,7 @@ package backup
 
 import (
 	"fmt"
-	"relKV/common"
+	"github.com/samlotti/relKV/common"
 	"time"
 )
 

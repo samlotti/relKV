@@ -1,4 +1,4 @@
-module relKV
+module github.com/samlotti/relKV
 
 go 1.18
 

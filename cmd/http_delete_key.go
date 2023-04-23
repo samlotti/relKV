@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gorilla/mux"
+	. "github.com/samlotti/relKV/common"
 	"net/http"
-	. "relKV/common"
 	"strings"
 	"sync/atomic"
 )
