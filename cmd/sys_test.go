@@ -181,7 +181,7 @@ func Test_PostData1(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
-	rdata = SearchResponseEntryFromResponse(resp)
+	_ = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 1, stringToInt(resp.Header.Get("ex_row_read")))
 	assert.Equal(t, 1, stringToInt(resp.Header.Get("ex_rows_selected")))
@@ -195,7 +195,7 @@ func Test_PostData1(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
-	rdata = SearchResponseEntryFromResponse(resp)
+	_ = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 3, stringToInt(resp.Header.Get("ex_row_read")))
 	assert.Equal(t, 3, stringToInt(resp.Header.Get("ex_rows_selected")))
@@ -211,7 +211,7 @@ func Test_PostData1(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
-	rdata = SearchResponseEntryFromResponse(resp)
+	_ = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 2, stringToInt(resp.Header.Get("ex_row_read")))
 	assert.Equal(t, 1, stringToInt(resp.Header.Get("ex_rows_selected")))
@@ -227,7 +227,7 @@ func Test_PostData1(t *testing.T) {
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assertHeader(t, resp, RESP_HEADER_RELDB_FUNCTION, "searchKeys")
-	rdata = SearchResponseEntryFromResponse(resp)
+	_ = SearchResponseEntryFromResponse(resp)
 
 	assert.Equal(t, 3, stringToInt(resp.Header.Get("ex_row_read")))
 	assert.Equal(t, 1, stringToInt(resp.Header.Get("ex_rows_selected")))

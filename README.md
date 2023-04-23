@@ -1,5 +1,7 @@
 # relKV
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/samlotti/relKV)](https://goreportcard.com/report/github.com/samlotti/relKV)
+
 A key value data store exposed over http(s).
 
 Features:
