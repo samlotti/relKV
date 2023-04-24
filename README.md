@@ -1,6 +1,7 @@
 # relKV
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/samlotti/relKV)](https://goreportcard.com/report/github.com/samlotti/relKV)
+[![Go Reference](https://pkg.go.dev/badge/github.com/samlotti/relKV.svg)](https://pkg.go.dev/github.com/samlotti/relKV)
 
 A key value data store exposed over http(s).
 
@@ -22,7 +23,7 @@ To start the server first copy the env.template and set the various attributes. 
 - Get /
   list all buckets.
 - Get /bucket  
-  search a bucket. Uses header attributes to configurate the search.
+  search a bucket. Uses header attributes to configure the search.
 
   - skip, max <- paging support
   - segments <- :segments: in keyportion, : separated
