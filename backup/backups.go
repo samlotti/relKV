@@ -1,7 +1,6 @@
 package backup
 
 import (
-	"archive/zip"
 	"bufio"
 	"fmt"
 	"github.com/dgraph-io/badger/v3"
@@ -10,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime/debug"
@@ -71,14 +71,14 @@ func (b *Backups) createBackup(name common.BucketName, db *badger.DB) {
 
 	StatsInstance.Backups[name].LastStart = time.Now()
 	StatsInstance.Backups[name].Status = "running"
-	StatsInstance.Backups[name].LastMessage = ""
+	StatsInstance.Backups[name].LastMessage = "Creating backup"
 
 	// log.Printf("Backup started: %s\n", name)
 	origBfname := CreateBackupFilename(name, suffixDay, suffixHour)
 	bfname := origBfname
-	if bkZip {
-		bfname = AddZipToFilename(bfname)
-	}
+	//if bkZip {
+	//	bfname = AddZipToFilename(bfname)
+	//}
 
 	destFilename := path.Join(b.bkfolder, bfname)
 	f, err := os.Create(destFilename)
@@ -89,22 +89,26 @@ func (b *Backups) createBackup(name common.BucketName, db *badger.DB) {
 		return
 	}
 
+	destFilenameZip := path.Join(b.bkfolder, AddZipToFilename(bfname))
+	os.Remove(destFilenameZip)
+
 	var w io.Writer
-	var wz *zip.Writer
+	//var wz *zip.Writer
 	var wb *bufio.Writer
 
-	if bkZip {
-		wz = zip.NewWriter(f)
-		w, err = wz.Create(origBfname)
-		if err != nil {
-			StatsInstance.Backups[name].Status = "failed"
-			StatsInstance.Backups[name].LastMessage = "error creating zip file: " + err.Error()
-			return
-		}
-	} else {
-		wb = bufio.NewWriter(f)
-		w = wb
-	}
+	// Dont zip in the process.t
+	//if bkZip {
+	//	wz = zip.NewWriter(f)
+	//	w, err = wz.Create(origBfname)
+	//	if err != nil {
+	//		StatsInstance.Backups[name].Status = "failed"
+	//		StatsInstance.Backups[name].LastMessage = "error creating zip file: " + err.Error()
+	//		return
+	//	}
+	//} else {
+	wb = bufio.NewWriter(f)
+	w = wb
+	//}
 
 	// _, err = db.Backup(w, 0)
 
@@ -114,23 +118,53 @@ func (b *Backups) createBackup(name common.BucketName, db *badger.DB) {
 	_, err = stream.Backup(w, 0)
 
 	StatsInstance.Backups[name].LastEnd = time.Now()
+
+	failed := false
 	if err != nil {
 		StatsInstance.Backups[name].Status = "failed"
 		StatsInstance.Backups[name].LastMessage = "error creating backup: " + err.Error()
+		failed = true
 		return
 	} else {
-		StatsInstance.Backups[name].Status = "completed"
-		StatsInstance.Backups[name].LastMessage = ""
+		if bkZip {
+			// StatsInstance.Backups[name].Status = "completed"
+			StatsInstance.Backups[name].LastMessage = "Zipping file"
+		}
 	}
-	if wz != nil {
-		wz.Flush()
-		wz.Close()
-	} else {
-		wb.Flush()
-	}
+	//if wz != nil {
+	//	wz.Flush()
+	//	wz.Close()
+	//} else {
+	wb.Flush()
+	//}
 	f.Close()
 
-	go ScpEnvInstance.AddScpJob(name, destFilename)
+	if failed {
+		return
+	}
+
+	// Do the zip outside the application.
+	if bkZip {
+		cmdStruct := exec.Command("gzip", destFilename)
+		_, err := cmdStruct.Output()
+		if err != nil {
+			// fmt.Println(err)
+			StatsInstance.Backups[name].Status = "gzip failed."
+			StatsInstance.Backups[name].LastMessage = "error zipping: " + err.Error() + " > " + destFilenameZip
+			failed = true
+		} else {
+			StatsInstance.Backups[name].Status = "completed"
+			StatsInstance.Backups[name].LastMessage = ""
+		}
+	}
+
+	if !failed {
+		if bkZip {
+			go ScpEnvInstance.AddScpJob(name, destFilenameZip)
+		} else {
+			go ScpEnvInstance.AddScpJob(name, destFilename)
+		}
+	}
 
 }
 

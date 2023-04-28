@@ -157,7 +157,11 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 				}
 
 				w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %-25s %s\n", job.BucketName, smsg, dur.String(), nextSend, lastSend, job.Message)))
-				if len(job.Message) > 0 {
+
+				// zipping file is a valid message
+				if len(job.Message) > 0 &&
+					job.Message != "Creating backup" &&
+					job.Message != "Zipping file" {
 					hasErrors = true
 				}
 
@@ -209,7 +213,7 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 	w.Write([]byte("\nMemory related\n"))
 	w.Write([]byte(fmt.Sprintf("BK_NUM_GO=%d  lower = less memory during backup\n", EnvironmentInstance.GetBackupGoRoutineNumber())))
 	w.Write([]byte(fmt.Sprintf("BLOOM_FALSE_PERCENTAGE=%f  0=off, less memory as approach to 0.99\n", EnvironmentInstance.GetBloomFalsePercentage())))
-	w.Write([]byte(fmt.Sprintf("BK_ZIP=%t  true will zip but consumes huge memory :(\n", EnvironmentInstance.GetBoolEnv("BK_ZIP"))))
+	// w.Write([]byte(fmt.Sprintf("BK_ZIP=%t  true will zip the file\n", EnvironmentInstance.GetBoolEnv("BK_ZIP"))))
 
 	w.Write([]byte("</pre></body></html>"))
 	if !hasErrors {

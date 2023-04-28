@@ -2,6 +2,7 @@
 To restore a backup do the following.
 
 copy the zip or backup file to a folder
+If it is zipped, unzip first before the restore.
 
 in the current relKv directory
 
@@ -10,7 +11,6 @@ in the current relKv directory
 ./relKv restore {name of backup file} {name of database for restore}
 
 Note that you cannot restore to an existing database so delete that database directory.
-The backup file can be a zip file from the backup. It can only contain a single file.
 
 Can restore to any name of a database. This makes it easy to restore it, try it and then just rename the directory.
 

@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"archive/zip"
 	"fmt"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/samlotti/relKV/cmd"
@@ -26,39 +25,46 @@ func handleRestore(cmds []string) {
 	dest := cmds[2]
 
 	fmt.Printf("from %s - %s\n", fname, dest)
-
-	bzip := strings.HasSuffix(fname, ".zip")
+	//
+	bzip := strings.HasSuffix(fname, ".zip") ||
+		strings.HasSuffix(fname, ".gz")
 
 	if bzip {
-		reader, err := zip.OpenReader(fname)
-		defer reader.Close()
-		if err != nil {
-			log.Printf("error opening zip file: %s", err.Error())
-			os.Exit(12)
-		}
-		if len(reader.File) != 1 {
-			log.Println("too many files in the zip, please unzip and then restore the individual file", err.Error())
-			os.Exit(12)
-		}
-		log.Printf("processing zip content file: %s", reader.File[0].Name)
-		srcFile, err := reader.File[0].Open()
-		if err != nil {
-			log.Printf("error opening zip content file: %s ->  %s", reader.File[0].Name, err.Error())
-			os.Exit(12)
-		}
-		defer srcFile.Close()
-		do_restore(srcFile, dest)
-
-	} else {
-		// Non zip file
-		srcFile, err := os.Open(fname)
-		if err != nil {
-			log.Printf("error opening file: %s", err.Error())
-			os.Exit(12)
-		}
-		defer srcFile.Close()
-		do_restore(srcFile, dest)
+		fmt.Println("please unzip the file.")
+		handleHelp()
+		os.Exit(12)
 	}
+	//
+	//if bzip {
+	//	reader, err := zip.OpenReader(fname)
+	//	defer reader.Close()
+	//	if err != nil {
+	//		log.Printf("error opening zip file: %s", err.Error())
+	//		os.Exit(12)
+	//	}
+	//	if len(reader.File) != 1 {
+	//		log.Println("too many files in the zip, please unzip and then restore the individual file", err.Error())
+	//		os.Exit(12)
+	//	}
+	//	log.Printf("processing zip content file: %s", reader.File[0].Name)
+	//	srcFile, err := reader.File[0].Open()
+	//	if err != nil {
+	//		log.Printf("error opening zip content file: %s ->  %s", reader.File[0].Name, err.Error())
+	//		os.Exit(12)
+	//	}
+	//	defer srcFile.Close()
+	//	do_restore(srcFile, dest)
+
+	//} else {
+	// Non zip file
+	srcFile, err := os.Open(fname)
+	if err != nil {
+		log.Printf("error opening file: %s", err.Error())
+		os.Exit(12)
+	}
+	defer srcFile.Close()
+	do_restore(srcFile, dest)
+	//}
 }
 
 func do_restore(file io.ReadCloser, dest string) {

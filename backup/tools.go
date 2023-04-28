@@ -18,5 +18,5 @@ func CreateBackupFilename(name common.BucketName, addDay bool, addHour bool) str
 }
 
 func AddZipToFilename(name string) string {
-	return name + ".zip"
+	return name + ".gz"
 }
