@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-const Version = "0.3.18"
+const Version = "0.3.19"
 
 const Banner = `
 ██████╗ ███████╗██╗     ██╗  ██╗██╗   ██╗

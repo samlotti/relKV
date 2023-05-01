@@ -106,7 +106,13 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 				smsg = "Not run"
 			}
 			w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %s\n", bucket, smsg, dur.String(), bstat.LastStart.Format(time.RFC822), bstat.LastMessage)))
-			if len(bstat.LastMessage) > 0 {
+			//if len(bstat.LastMessage) > 0 {
+			//	hasErrors = true
+			//}
+			// zipping file is a valid message
+			if len(bstat.LastMessage) > 0 &&
+				bstat.LastMessage != "Creating backup" &&
+				bstat.LastMessage != "Zipping file" {
 				hasErrors = true
 			}
 		}
@@ -159,9 +165,7 @@ func (b *BucketsDb) status(writer http.ResponseWriter, request *http.Request) {
 				w.Write([]byte(fmt.Sprintf("%-20s %-15s %-25s %-25s %-25s %s\n", job.BucketName, smsg, dur.String(), nextSend, lastSend, job.Message)))
 
 				// zipping file is a valid message
-				if len(job.Message) > 0 &&
-					job.Message != "Creating backup" &&
-					job.Message != "Zipping file" {
+				if len(job.Message) > 0 {
 					hasErrors = true
 				}
 
