@@ -207,4 +207,6 @@ func (s *ScpEnv) sendScp(j *common.ScpJob) {
 
 	j.Status = common.ScpComplete
 
+	// Reset the message in case there was a prior error message
+	j.Message = ""
 }
